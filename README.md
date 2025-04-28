@@ -12,28 +12,38 @@ Este proyecto implementa una arquitectura de microservicios utilizando **Java + 
 └── ...
 ```
 ## 🚀 Microservicios 
-### ✅ usuario-service
+### ✅ user-service
 #### Servicio encargado de:
 - Registrar usuarios 
 - Buscar usuarios 
 - Autenticación (futura implementación)
 
-#### Tecnologías:
-- Java 21+ 
-- Spring Boot 
-- Spring Web 
-- Spring Data JPA 
+### ⏳ pet-service 
+#### Servicio encargado de:
+- Registrar mascotas
+- Consultar mascotas por ID
+- Listar todas las mascotas
+- Actualizar mascotas
+- Eliminar mascotas
+
+#### Tecnologías de user y pet-service:
+- Java 21+
+- Spring Boot
+- Spring Web
+- Spring Data JPA
+- MapStruct
 - PostgreSQL
 
-### ⏳ pet-service y chat-service
-Actualmente están definidos en la estructura del proyecto, pero todavía no implementados.
+### chat-service
+Actualmente está definido en la estructura del proyecto, pero todavía no implementado.
 
 ## 🧱 Arquitectura
 Cada microservicio sigue una arquitectura en capas:
-- Controller: expone endpoints REST
-- Service: lógica de negocio
-- Repository: acceso a datos (JPA)
-- Model: entidades del dominio
+- **Controller:** expone endpoints REST
+- **Service:** lógica de negocio
+- **Repository:** acceso a datos (JPA)
+- **Model:** entidades del dominio
+- **DTOs y Mappers:** para mapear entre entidades y respuestas de API (usando MapStruct)
 
 ## 🛠️ Cómo correr el proyecto
 #### Prerrequisitos
@@ -62,7 +72,7 @@ Cada microservicio tendrá sus propias pruebas unitarias e integradas. Por el mo
 | Servicio | Estado        |
 |----------|---------------|
 | User     | ✅ Implementado (estructura base) |
-| Pet      | 🚧 En desarrollo |
+| Pet      | ✅ Implementado (estructura base) |
 | Chat     | 🚧 En desarrollo |
 
 ## ✍️ Autora
