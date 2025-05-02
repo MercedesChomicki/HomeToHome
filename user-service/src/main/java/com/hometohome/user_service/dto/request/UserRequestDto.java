@@ -1,4 +1,4 @@
-package com.hometohome.user_service.dto;
+package com.hometohome.user_service.dto.request;
 
 import lombok.Getter;
 

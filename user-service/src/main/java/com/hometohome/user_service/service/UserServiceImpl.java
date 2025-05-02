@@ -1,14 +1,14 @@
 package com.hometohome.user_service.service;
 
-import com.hometohome.user_service.dto.UserRequestDto;
-import com.hometohome.user_service.dto.UserResponseDto;
+import com.hometohome.user_service.dto.request.UserRequestDto;
+import com.hometohome.user_service.dto.response.UserResponseDto;
+import com.hometohome.user_service.exception.ResourceNotFoundException;
 import com.hometohome.user_service.mapper.UserMapper;
 import com.hometohome.user_service.model.UserEntity;
 import com.hometohome.user_service.repository.UserRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -22,8 +22,10 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public Optional<UserEntity> getUserById(UUID id) {
-        return userRepository.findById(id);
+    public UserResponseDto getUserById(UUID id) {
+        UserEntity user = userRepository.findById(id)
+                .orElseThrow(()->new ResourceNotFoundException("User",id));
+        return userMapper.toDTO(user);
     }
 
     @Override

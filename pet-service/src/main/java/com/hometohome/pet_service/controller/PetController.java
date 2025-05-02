@@ -2,6 +2,7 @@ package com.hometohome.pet_service.controller;
 
 import com.hometohome.pet_service.dto.request.PetRequestDto;
 import com.hometohome.pet_service.dto.response.PetResponseDto;
+import com.hometohome.pet_service.dto.response.UserResponseDto;
 import com.hometohome.pet_service.service.PetServiceImpl;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
@@ -48,5 +49,10 @@ public class PetController {
     public ResponseEntity<Void> deletePet(@PathVariable UUID id) {
         petService.deletePet(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/pet/{id}/owner")
+    public ResponseEntity<UserResponseDto> getPetOwner(@PathVariable UUID id) {
+        return ResponseEntity.ok(petService.getPetOwner(id));
     }
 }

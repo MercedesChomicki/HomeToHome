@@ -1,8 +1,7 @@
 package com.hometohome.user_service.controller;
 
-import com.hometohome.user_service.dto.UserRequestDto;
-import com.hometohome.user_service.dto.UserResponseDto;
-import com.hometohome.user_service.model.UserEntity;
+import com.hometohome.user_service.dto.request.UserRequestDto;
+import com.hometohome.user_service.dto.response.UserResponseDto;
 import com.hometohome.user_service.service.UserServiceImpl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,10 +20,8 @@ public class UserController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> getUserById(@PathVariable UUID id) {
-        return userService.getUserById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<UserResponseDto> getUserById(@PathVariable UUID id) {
+        return ResponseEntity.ok(userService.getUserById(id));
     }
 
     @GetMapping

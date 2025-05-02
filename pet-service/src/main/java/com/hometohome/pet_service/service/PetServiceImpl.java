@@ -1,7 +1,9 @@
 package com.hometohome.pet_service.service;
 
+import com.hometohome.pet_service.client.UserServiceClient;
 import com.hometohome.pet_service.dto.request.PetRequestDto;
 import com.hometohome.pet_service.dto.response.PetResponseDto;
+import com.hometohome.pet_service.dto.response.UserResponseDto;
 import com.hometohome.pet_service.exception.ResourceNotFoundException;
 import com.hometohome.pet_service.mapper.PetMapper;
 import com.hometohome.pet_service.model.entity.Pet;
@@ -15,10 +17,12 @@ import java.util.UUID;
 public class PetServiceImpl implements PetService {
     private final PetRepository petRepository;
     private final PetMapper petMapper;
+    private final UserServiceClient userServiceClient;
 
-    public PetServiceImpl(PetRepository petRepository, PetMapper petMapper) {
+    public PetServiceImpl(PetRepository petRepository, PetMapper petMapper, UserServiceClient userServiceClient) {
         this.petRepository = petRepository;
         this.petMapper = petMapper;
+        this.userServiceClient = userServiceClient;
     }
 
     @Override
@@ -65,5 +69,13 @@ public class PetServiceImpl implements PetService {
             throw new ResourceNotFoundException("Pet", id);
         }
         petRepository.deleteById(id);
+    }
+
+    @Override
+    public UserResponseDto getPetOwner(UUID id) {
+        Pet pet = petRepository.findById(id)
+                .orElseThrow(()-> new ResourceNotFoundException("Pet",id));
+        UUID ownerId = pet.getOwnerId();
+        return userServiceClient.getUserById(ownerId);
     }
 }
