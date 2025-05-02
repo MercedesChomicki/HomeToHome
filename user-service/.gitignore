@@ -32,5 +32,11 @@ build/
 ### VS Code ###
 .vscode/
 
-### Config ###
-application.yml
+# Docker
+*.tar
+*.log
+docker-compose.override.yml
+docker-volumes/
+
+# Entorno local - variables sensibles
+.env
