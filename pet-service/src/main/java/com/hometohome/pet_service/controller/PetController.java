@@ -2,8 +2,9 @@ package com.hometohome.pet_service.controller;
 
 import com.hometohome.pet_service.dto.request.PetRequestDto;
 import com.hometohome.pet_service.dto.response.PetResponseDto;
-import com.hometohome.pet_service.dto.response.UserResponseDto;
+import com.hometohome.pet_service.dto.response.UserDto;
 import com.hometohome.pet_service.service.PetServiceImpl;
+import com.hometohome.pet_service.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -17,9 +18,11 @@ import java.util.UUID;
 @RequestMapping("/pets")
 public class PetController {
     private final PetServiceImpl petService;
+    private final UserService userService;
 
-    public PetController(PetServiceImpl petService) {
+    public PetController(PetServiceImpl petService, UserService userService) {
         this.petService = petService;
+        this.userService = userService;
     }
 
     @GetMapping("/{id}")
@@ -51,8 +54,15 @@ public class PetController {
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/pet/{id}/owner")
-    public ResponseEntity<UserResponseDto> getPetOwner(@PathVariable UUID id) {
-        return ResponseEntity.ok(petService.getPetOwner(id));
+    @GetMapping("/{id}/owner")
+    public ResponseEntity<?> getPetOwner(@PathVariable UUID id) {
+        /*UserResponseDto response = userService.getPetOwner(id);
+        if (Boolean.TRUE.equals(response.getIsError())) {
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(response.getErrorMsg());
+        }
+        UserDto user = response.getUser();*/
+
+        UserDto user = userService.getPetOwner(id);
+        return ResponseEntity.ok("El dueño es " + user.getName() + " y vive en " + user.getCity());
     }
 }

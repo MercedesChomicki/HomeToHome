@@ -1,9 +1,7 @@
 package com.hometohome.pet_service.service;
 
-import com.hometohome.pet_service.client.UserServiceClient;
 import com.hometohome.pet_service.dto.request.PetRequestDto;
 import com.hometohome.pet_service.dto.response.PetResponseDto;
-import com.hometohome.pet_service.dto.response.UserResponseDto;
 import com.hometohome.pet_service.exception.ResourceNotFoundException;
 import com.hometohome.pet_service.mapper.PetMapper;
 import com.hometohome.pet_service.model.entity.Pet;
@@ -17,12 +15,12 @@ import java.util.UUID;
 public class PetServiceImpl implements PetService {
     private final PetRepository petRepository;
     private final PetMapper petMapper;
-    private final UserServiceClient userServiceClient;
+    private final UserService userService;
 
-    public PetServiceImpl(PetRepository petRepository, PetMapper petMapper, UserServiceClient userServiceClient) {
+    public PetServiceImpl(PetRepository petRepository, PetMapper petMapper, UserService userService) {
         this.petRepository = petRepository;
         this.petMapper = petMapper;
-        this.userServiceClient = userServiceClient;
+        this.userService = userService;
     }
 
     @Override
@@ -42,18 +40,12 @@ public class PetServiceImpl implements PetService {
 
     @Override
     public PetResponseDto createPet(PetRequestDto petRequestDto) {
+        userService.getUser(petRequestDto.getOwnerId()); // valida existencia
         Pet pet = petMapper.toEntity(petRequestDto);
         Pet savedPet = petRepository.save(pet);
         return petMapper.toDTO(savedPet);
     }
 
-    /** TODO petMapper.updatePetFromDto(petDto, existingPet) === (  if(petDto.getName() != null) existingPet.setName(petDto.getName());
-     *              if(petDto.getBirthDate() != null) existingPet.setBirthDate(petDto.getBirthDate());
-     *              if(petDto.getSpecies() != null) existingPet.setSpecies(getSpeciesFromString(petDto.getSpecies()));
-     *              if(petDto.getSize() != null) existingPet.setSize(getSizeFromString(petDto.getSize()));
-     *              if(petDto.getStory() != null) existingPet.setStory(petDto.getStory());
-     *              if(petDto.getPhotosUrl() != null) existingPet.setPhotosUrl(petDto.getPhotosUrl());  )
-     */
     @Override
     public PetResponseDto updatePet(UUID id, PetRequestDto petDto) {
         Pet existingPet = petRepository.findById(id)
@@ -69,13 +61,5 @@ public class PetServiceImpl implements PetService {
             throw new ResourceNotFoundException("Pet", id);
         }
         petRepository.deleteById(id);
-    }
-
-    @Override
-    public UserResponseDto getPetOwner(UUID id) {
-        Pet pet = petRepository.findById(id)
-                .orElseThrow(()-> new ResourceNotFoundException("Pet",id));
-        UUID ownerId = pet.getOwnerId();
-        return userServiceClient.getUserById(ownerId);
     }
 }
