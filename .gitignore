@@ -1,10 +1,18 @@
 HELP.md
 target/
 !.mvn/wrapper/maven-wrapper.jar
-!**/src/main/**/target/
-!**/src/test/**/target/
 
-### STS ###
+# IntelliJ
+.idea/
+*.iws
+*.iml
+*.ipr
+**/.idea/dataSources/
+**/.idea/dataSources.local.xml
+**/.idea/sqlDataSources.xml
+**/.idea/datasources/
+
+# STS
 .apt_generated
 .classpath
 .factorypath
@@ -13,27 +21,28 @@ target/
 .springBeans
 .sts4-cache
 
-### IntelliJ IDEA ###
-.idea
-*.iws
-*.iml
-*.ipr
-
-### NetBeans ###
+# NetBeans
 /nbproject/private/
 /nbbuild/
 /dist/
 /nbdist/
 /.nb-gradle/
+
+# VS Code
+.vscode/
+
+# Maven build
 build/
 !**/src/main/**/build/
 !**/src/test/**/build/
 
-### VS Code ###
-.vscode/
-
 # Docker
-*.tar
-*.log
 docker-compose.override.yml
-docker-volumes/
+
+# Logs
+*.log
+logs/
+
+# Env files
+.env.dev
+.env.prod

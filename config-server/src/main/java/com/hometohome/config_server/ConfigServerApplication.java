@@ -1,17 +1,17 @@
-package com.hometohome.pet_service;
+package com.hometohome.config_server;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
-import org.springframework.cloud.openfeign.EnableFeignClients;
+import org.springframework.cloud.config.server.EnableConfigServer;
 
 @SpringBootApplication
-@EnableFeignClients
 @EnableDiscoveryClient
-public class PetServiceApplication {
+@EnableConfigServer
+public class ConfigServerApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(PetServiceApplication.class, args);
+		SpringApplication.run(ConfigServerApplication.class, args);
 	}
 
 }

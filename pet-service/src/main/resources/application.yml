@@ -1,32 +1,10 @@
 spring:
   application:
     name: pet-service
-  datasource:
-    url: ${PET_DATASOURCE_URL}
-    username: ${PET_DATASOURCE_USERNAME}
-    password: ${PET_DATASOURCE_PASSWORD}
-    driver-class-name: org.postgresql.Driver
-  jpa:
-    hibernate:
-      ddl-auto: update
-    show-sql: true
-    database-platform: org.hibernate.dialect.PostgreSQLDialect
-  user-service:
-    url: ${USER_SERVICE_URL}
+  config:
+    import: optional:configserver:http://config-server:8888
 
-server:
-  port: 8082
-
-resilience4j:
-  circuitbreaker:
-    instances:
-      userService:
-        minimumNumberOfCalls: 100
-        failureRateThreshold: 100
-        waitDurationInOpenState: 1ms
-
-  retry:
-    instances:
-      userService:
-        maxAttempts: 3
-        waitDuration: 2s
+management:
+  health:
+    circuit-breakers:
+      enabled: true

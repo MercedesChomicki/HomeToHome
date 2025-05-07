@@ -31,9 +31,3 @@ build/
 
 ### VS Code ###
 .vscode/
-
-# Docker
-*.tar
-*.log
-docker-compose.override.yml
-docker-volumes/
