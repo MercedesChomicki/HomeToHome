@@ -1,8 +1,24 @@
+# Archivos de ayuda
 HELP.md
+
+# Maven
 target/
 !.mvn/wrapper/maven-wrapper.jar
 
-# IntelliJ
+# Maven build
+build/
+!**/src/main/**/build/
+!**/src/test/**/build/
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+# Logs
+*.log
+logs/
+
+# IDEs
+
+## IntelliJ
 .idea/
 *.iws
 *.iml
@@ -12,7 +28,7 @@ target/
 **/.idea/sqlDataSources.xml
 **/.idea/datasources/
 
-# STS
+## Spring Tool Suite (STS)
 .apt_generated
 .classpath
 .factorypath
@@ -21,27 +37,20 @@ target/
 .springBeans
 .sts4-cache
 
-# NetBeans
+## NetBeans
 /nbproject/private/
 /nbbuild/
 /dist/
 /nbdist/
 /.nb-gradle/
 
-# VS Code
+## VS Code
 .vscode/
 
-# Maven build
-build/
-!**/src/main/**/build/
-!**/src/test/**/build/
-
 # Docker
+*.tar
 docker-compose.override.yml
-
-# Logs
-*.log
-logs/
+docker-volumes/
 
 # Env files
 .env.dev
