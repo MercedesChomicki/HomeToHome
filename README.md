@@ -53,10 +53,10 @@ Actualmente está definido en la estructura del proyecto, pero todavía no imple
 
 
 -  🟩 **Spring Boot:** Framework que simplifica la creación de microservicios en Java. Este proyecto utiliza:
-  -  **Spring Web:** Para exponer APIs REST.
-  - **Spring Data JPA:** Para persistencia de datos. 
-  - **Spring Cloud Config:** Para configuración centralizada de los servicios. 
-  - **Spring Cloud Eureka Client:** Para el registro y descubrimiento de microservicios.
+   - **Spring Web:** Para exponer APIs REST.
+   - **Spring Data JPA:** Para persistencia de datos. 
+   - **Spring Cloud Config:** Para configuración centralizada de los servicios. 
+   - **Spring Cloud Eureka Client:** Para el registro y descubrimiento de microservicios.
 
 
 - 🛠️ **MapStruct:** Generador de código para convertir automáticamente entre entidades y DTOs, mejorando la mantenibilidad.
