@@ -1,8 +1,10 @@
+server:
+  port: 8888
 spring:
   application:
     name: config-server
   profiles:
-    active: dev
+    active: ${SPRING_PROFILES_ACTIVE}
   cloud:
     config:
       server:
@@ -10,12 +12,12 @@ spring:
           uri: ${GIT_URI}
           clone-on-start: true
           default-label: main
-          search-paths: .
+          search-paths: '{application}'
 
 eureka:
   client:
-    register-with-eureka: false
+    register-with-eureka: true
     fetch-registry: false
-
-server:
-  port: 8888
+    service-url:
+      defaultZone: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE}
+    registry-fetch-interval-seconds: 5

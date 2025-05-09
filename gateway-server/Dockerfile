@@ -9,19 +9,11 @@ RUN mvn clean package -DskipTests
 # Etapa 2: Imagen final de ejecución
 FROM eclipse-temurin:21-jdk-alpine
 WORKDIR /app
-
-# Copiamos el jar y el entrypoint
-COPY --from=build /app/target/user-service.jar user-service.jar
+COPY --from=build /app/target/gateway-server.jar gateway-server.jar
 COPY entrypoint.sh /entrypoint.sh
-
-# Damos permisos de ejecución
 RUN chmod +x /entrypoint.sh
-
-# Instalamos curl para el healthcheck
 RUN apk add --no-cache curl
-
-# Exponemos el puerto
-EXPOSE 8081
-
-# Usamos el entrypoint custom
+EXPOSE 8089
 ENTRYPOINT ["/entrypoint.sh"]
+
+

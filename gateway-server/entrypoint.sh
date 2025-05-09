@@ -8,4 +8,4 @@ until curl -s http://eureka-server:8761/eureka/apps > /dev/null; do
 done
 
 echo "Eureka está disponible. Iniciando el servicio..."
-exec java -Dspring.profiles.active=${SPRING_PROFILES_ACTIVE} -jar pet-service.jar
+exec java -jar gateway-server.jar
