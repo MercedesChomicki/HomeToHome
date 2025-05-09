@@ -10,6 +10,8 @@ Este proyecto implementa una arquitectura de microservicios utilizando **Java + 
 │   ├── Dockerfile        # Imagen Docker para config-server
 ├── eureka-server         # Servidor de descubrimiento de servicios (Eureka)
 │   ├── Dockerfile        # Imagen Docker para eureka-server
+├── gateway-server        # Gateway API para enrutar solicitudes a los microservicios
+│   ├── Dockerfile        # Imagen Docker para gateway-server
 ├── user-service          # Microservicio para gestión de usuarios
 │   ├── Dockerfile        # Imagen Docker para user-service
 ├── pet-service           # Microservicio para gestión de mascotas
@@ -44,6 +46,12 @@ Este proyecto implementa una arquitectura de microservicios utilizando **Java + 
 ### ✅ eureka-server
 #### Responsabilidades:
 - Registro y descubrimiento de microservicios
+
+### ✅ gateway-server
+#### Responsabilidades:
+- Actuar como puerta de entrada única para todos los microservicios
+- Enrutar las solicitudes a los servicios correspondientes según sus rutas
+- Aplicar filtros comunes como autenticación, logging o manejo de errores (futura mejora)
 
 ### ⏳ chat-service
 Actualmente está definido en la estructura del proyecto, pero todavía no implementado.
@@ -116,6 +124,7 @@ Se incluye un archivo .gitattributes para normalizar los finales de línea entre
 | Pet            | ✅ Implementado + Feign client    |
 | Config Server  | ✅ Implementado                   |
 | Eureka Server  | ✅ Implementado                   |
+| Gateway Server | ✅ Implementado                   |
 | Chat           | 🚧 En desarrollo                 |
 
 ## 📄 Archivo .env
