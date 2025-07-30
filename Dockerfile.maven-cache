@@ -1,0 +1,21 @@
+# Etapa base para cachear dependencias Maven
+FROM maven:3.9.9-eclipse-temurin-21-alpine AS maven-deps
+
+WORKDIR /build
+
+# Copia todos los POMs (sin los src) para cachear solo dependencias
+COPY chat-service/pom.xml chat-service/
+COPY config-server/pom.xml config-server/
+COPY eureka-server/pom.xml eureka-server/
+COPY gateway-server/pom.xml gateway-server/
+COPY pet-service/pom.xml pet-service/
+COPY user-service/pom.xml user-service/
+
+
+# Descargar las dependencias
+RUN mvn -B -f chat-service/pom.xml dependency:go-offline \
+ && mvn -B -f config-server/pom.xml dependency:go-offline \
+ && mvn -B -f eureka-server/pom.xml dependency:go-offline \
+ && mvn -B -f gateway-server/pom.xml dependency:go-offline \
+ && mvn -B -f pet-service/pom.xml dependency:go-offline \
+ && mvn -B -f user-service/pom.xml dependency:go-offline

@@ -5,14 +5,15 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 
 @NoArgsConstructor
 @AllArgsConstructor
 @Data
 @ToString
 public class ChatMessage {
-    private String nickname;
+    private String senderId;
+    private String recipientId;
     private String content;
-    private Date timestamp;
+    private LocalDateTime timestamp;
 }

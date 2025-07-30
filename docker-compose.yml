@@ -58,15 +58,26 @@ services:
       - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE}
       - SPRING_CLOUD_CONFIG_URI=${SPRING_CLOUD_CONFIG_URI}
+      - JWT_SECRET=${JWT_SECRET}
     depends_on:
-      - user-postgres
-      - config-server
-      - eureka-server
+      eureka-server:
+        condition: service_healthy
+      user-postgres:
+        condition: service_started
+      config-server:
+        condition: service_started
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8081/actuator/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     networks:
       - internal
 
   pet-service:
-    build: ./pet-service
+    build:
+      context: ./pet-service
+      dockerfile: Dockerfile
     container_name: pet-service
     ports:
       - "8082:8082"
@@ -79,10 +90,19 @@ services:
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE}
       - SPRING_CLOUD_CONFIG_URI=${SPRING_CLOUD_CONFIG_URI}
     depends_on:
-      - pet-postgres
-      - user-service
-      - config-server
-      - eureka-server
+      eureka-server:
+        condition: service_healthy
+      config-server:
+        condition: service_started
+      user-service:
+        condition: service_started
+      pet-postgres:
+        condition: service_started
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8082/actuator/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     networks:
       - internal
 
@@ -98,15 +118,26 @@ services:
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE}
       - SPRING_CLOUD_CONFIG_URI=${SPRING_CLOUD_CONFIG_URI}
       - CHAT_DATASOURCE_URL=${CHAT_DATASOURCE_URL}
+      - JWT_SECRET=${JWT_SECRET}
     depends_on:
-      - mongo-db
-      - eureka-server
-      - config-server
+      eureka-server:
+        condition: service_healthy
+      config-server:
+        condition: service_started
+      mongo-db:
+        condition: service_started
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8083/actuator/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     networks:
       - internal
 
   config-server:
-    build: ./config-server
+    build:
+      context: ./config-server
+      dockerfile: Dockerfile
     container_name: config-server
     ports:
       - "8888:8888"
@@ -114,39 +145,57 @@ services:
       - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}
       - GIT_URI=${GIT_URI}
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE}
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8888/actuator/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     networks:
       - internal
 
   gateway-server:
-    build: ./gateway-server
+    build:
+      context: ./gateway-server
+      dockerfile: Dockerfile
     container_name: gateway-server
     ports:
-      - "8089:8089"
+      - "8080:8080"
     environment:
       - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE}
       - SPRING_CLOUD_CONFIG_URI=${SPRING_CLOUD_CONFIG_URI}
     depends_on:
-      - config-server
-      - eureka-server
+      eureka-server:
+        condition: service_healthy
+      config-server:
+        condition: service_started
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8080/actuator/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     networks:
       - internal
   
   eureka-server:
-    build: ./eureka-server
+    build:
+      context: ./eureka-server
+      dockerfile: Dockerfile
     container_name: eureka-server
     ports:
       - "8761:8761"
     environment:
       - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}
-      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE}
-    networks:
-      - internal
     healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:8761/actuator/health" ]
+      test: wget --spider -q http://localhost:8761/actuator/health || exit 1
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - internal
 
 volumes:
   mongo_data:

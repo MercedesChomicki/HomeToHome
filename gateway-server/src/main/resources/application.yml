@@ -5,3 +5,36 @@ spring:
     active: ${SPRING_PROFILES_ACTIVE}
   config:
     import: optional:configserver:${SPRING_CLOUD_CONFIG_URI}
+  security:
+    user:
+      name: disabled
+      password: disabled
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: true
+      routes:
+        - id: user-service
+          uri: lb://user-service
+          predicates:
+            - Path=/api/users/**
+          filters:
+            - StripPrefix=1
+        - id: pet-service
+          uri: lb://pet-service
+          predicates:
+            - Path=/api/pets/**
+          filters:
+            - StripPrefix=1
+        - id: chat-service
+          uri: lb://chat-service
+          predicates:
+            - Path=/api/chat/**
+          filters:
+            - StripPrefix=1
+
+logging:
+  level:
+    org.springframework.cloud.gateway: DEBUG

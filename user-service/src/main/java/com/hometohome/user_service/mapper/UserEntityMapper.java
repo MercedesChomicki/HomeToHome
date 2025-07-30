@@ -5,6 +5,6 @@ import com.hometohome.user_service.model.UserEntity;
 import org.mapstruct.Mapper;
 
 @Mapper(componentModel = "spring")
-public interface UserMapper {
+public interface UserEntityMapper {
     UserResponseDto toDTO(UserEntity user);
 }
