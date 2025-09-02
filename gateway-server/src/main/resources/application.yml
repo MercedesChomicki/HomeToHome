@@ -15,6 +15,14 @@ spring:
         locator:
           enabled: true
           lower-case-service-id: true
+      globalcors:
+        cors-configurations:
+          '[/api/**]':
+            allowedOrigins: "http://localhost:5173"
+            allowedMethods: "GET,POST,PUT,DELETE,OPTIONS"
+            allowedHeaders: "*"
+            allowCredentials: true
+            exposedHeaders: "*"
       routes:
         - id: user-service
           uri: lb://user-service
@@ -32,6 +40,12 @@ spring:
           uri: lb://chat-service
           predicates:
             - Path=/api/chat/**
+          filters:
+            - StripPrefix=1
+        - id: websocket-service
+          uri: lb://chat-service
+          predicates:
+            - Path=/api/ws/**
           filters:
             - StripPrefix=1
 

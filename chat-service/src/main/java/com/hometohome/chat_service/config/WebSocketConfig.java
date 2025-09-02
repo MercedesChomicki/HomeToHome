@@ -2,6 +2,7 @@ package com.hometohome.chat_service.config;
 
 import com.hometohome.chat_service.service.JwtService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
@@ -18,6 +19,7 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 
 import java.util.List;
 
+@Slf4j
 @Configuration
 @EnableWebSocketMessageBroker
 @RequiredArgsConstructor
@@ -33,13 +35,23 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
                 StompHeaderAccessor accessor = StompHeaderAccessor.wrap(message);
 
                 if (StompCommand.CONNECT.equals(accessor.getCommand())) {
-                    String token = accessor.getFirstNativeHeader("Authorization");
-                    if (token != null && token.startsWith("Bearer ")) {
-                        token = token.substring(7);
-                        String email = jwtService.extractEmail(token);
-                        // acá podrías validar y autorizar
-                        Authentication auth = new UsernamePasswordAuthenticationToken(email, null, List.of());
-                        accessor.setUser(auth);
+                    try {
+                        String token = accessor.getFirstNativeHeader("Authorization");
+                        log.info("🔐 Intentando conectar WebSocket con token: {}", token != null ? "presente" : "ausente");
+                        
+                        if (token != null && token.startsWith("Bearer ")) {
+                            token = token.substring(7);
+                            String email = jwtService.extractEmail(token);
+                            log.info("✅ Usuario autenticado: {}", email);
+                            
+                            // Crear autenticación
+                            Authentication auth = new UsernamePasswordAuthenticationToken(email, null, List.of());
+                            accessor.setUser(auth);
+                        } else {
+                            log.warn("⚠️ Token de autorización no válido o ausente");
+                        }
+                    } catch (Exception e) {
+                        log.error("❌ Error durante la autenticación WebSocket: {}", e.getMessage());
                     }
                 }
                 return message;
@@ -49,13 +61,19 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
-        registry.addEndpoint("/ws").setAllowedOrigins("http://localhost:5173").withSockJS();
-        registry.addEndpoint("/info").setAllowedOrigins("http://localhost:5173").withSockJS();
+        // Configurar endpoints para funcionar a través del gateway
+        registry.addEndpoint("/ws")
+               .withSockJS();
+        
+        // Endpoint adicional para el gateway
+        // registry.addEndpoint("/api/ws")
+        //        .withSockJS();
     }
 
     @Override
     public void configureMessageBroker(MessageBrokerRegistry registry) {
-        registry.enableSimpleBroker("/topic"); // o RabbitMQ si necesitás escalar
+        registry.enableSimpleBroker("/topic", "/user/queue"); // Agregar /user/queue para mensajes privados
         registry.setApplicationDestinationPrefixes("/app"); // destinos que van al @MessageMapping
+        registry.setUserDestinationPrefix("/user"); // Prefijo para mensajes privados
     }
 }

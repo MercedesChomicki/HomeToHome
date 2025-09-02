@@ -3,7 +3,7 @@ version: '3.8'
 services:
   mongo-db:
     image: mongo
-    container_name: mongo-db
+    container_name: mongo-db-test
     restart: always
     environment:
       - MONGO_INITDB_ROOT_USERNAME=admin
@@ -18,7 +18,7 @@ services:
 
   user-postgres:
     image: postgres:13
-    container_name: user-postgres
+    container_name: user-postgres-test
     environment:
       - POSTGRES_DB=${USER_POSTGRES_DB}
       - POSTGRES_USER=${USER_POSTGRES_USER}
@@ -32,7 +32,7 @@ services:
 
   pet-postgres:
     image: postgres:13
-    container_name: pet-postgres
+    container_name: pet-postgres-test
     environment:
       - POSTGRES_DB=${PET_POSTGRES_DB}
       - POSTGRES_USER=${PET_POSTGRES_USER}
@@ -48,7 +48,7 @@ services:
     build:
       context: ./user-service
       dockerfile: Dockerfile
-    container_name: user-service
+    container_name: user-service-test
     ports:
       - "8081:8081"
     environment:
@@ -78,7 +78,7 @@ services:
     build:
       context: ./pet-service
       dockerfile: Dockerfile
-    container_name: pet-service
+    container_name: pet-service-test
     ports:
       - "8082:8082"
     environment:
@@ -110,7 +110,7 @@ services:
     build:
       context: ./chat-service
       dockerfile: Dockerfile
-    container_name: chat-service
+    container_name: chat-service-test
     ports:
       - "8083:8083"
     environment:
@@ -138,7 +138,7 @@ services:
     build:
       context: ./config-server
       dockerfile: Dockerfile
-    container_name: config-server
+    container_name: config-server-test
     ports:
       - "8888:8888"
     environment:
@@ -160,7 +160,7 @@ services:
     build:
       context: ./gateway-server
       dockerfile: Dockerfile
-    container_name: gateway-server
+    container_name: gateway-server-test
     ports:
       - "8080:8080"
     environment:
@@ -184,7 +184,7 @@ services:
     build:
       context: ./eureka-server
       dockerfile: Dockerfile
-    container_name: eureka-server
+    container_name: eureka-server-test
     ports:
       - "8761:8761"
     environment:

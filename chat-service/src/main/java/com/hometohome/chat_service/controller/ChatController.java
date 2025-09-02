@@ -2,6 +2,7 @@ package com.hometohome.chat_service.controller;
 
 import com.hometohome.chat_service.model.ChatMessage;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -9,6 +10,7 @@ import org.springframework.stereotype.Controller;
 
 import java.time.LocalDateTime;
 
+@Slf4j
 @Controller
 @RequiredArgsConstructor
 public class ChatController {
@@ -18,17 +20,15 @@ public class ChatController {
     @MessageMapping("/chat")
     public void sendMessage(@Payload ChatMessage message) {
         message.setTimestamp(LocalDateTime.now());
+        log.info("📨 Mensaje privado recibido: {} -> {}", message.getSenderId(), message.getRecipientId());
 
-        String channelId = generateChannelId(message.getSenderId(), message.getRecipientId());
-
-        // Envía a una ruta personalizada basada en el recipientId
-        messagingTemplate.convertAndSend(
-                "/topic/private-chat/" + channelId,
+        // Enviar mensaje privado al destinatario específico
+        messagingTemplate.convertAndSendToUser(
+                message.getRecipientId(),
+                "/queue/messages",
                 message
         );
-    }
-
-    private String generateChannelId(String user1, String user2) {
-        return user1.compareTo(user2) < 0 ? user1 + "-" + user2 : user2 + "-" + user1;
+        
+        log.info("✅ Mensaje privado enviado a: {}", message.getRecipientId());
     }
 }
