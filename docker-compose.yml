@@ -3,8 +3,7 @@ version: '3.8'
 services:
   mongo-db:
     image: mongo
-    container_name: mongo-db-test
-    restart: always
+    container_name: mongo-db
     environment:
       - MONGO_INITDB_ROOT_USERNAME=admin
       - MONGO_INITDB_ROOT_PASSWORD=admin123
@@ -18,7 +17,7 @@ services:
 
   user-postgres:
     image: postgres:13
-    container_name: user-postgres-test
+    container_name: user-postgres
     environment:
       - POSTGRES_DB=${USER_POSTGRES_DB}
       - POSTGRES_USER=${USER_POSTGRES_USER}
@@ -32,7 +31,7 @@ services:
 
   pet-postgres:
     image: postgres:13
-    container_name: pet-postgres-test
+    container_name: pet-postgres
     environment:
       - POSTGRES_DB=${PET_POSTGRES_DB}
       - POSTGRES_USER=${PET_POSTGRES_USER}
@@ -48,7 +47,7 @@ services:
     build:
       context: ./user-service
       dockerfile: Dockerfile
-    container_name: user-service-test
+    container_name: user-service
     ports:
       - "8081:8081"
     environment:
@@ -78,7 +77,7 @@ services:
     build:
       context: ./pet-service
       dockerfile: Dockerfile
-    container_name: pet-service-test
+    container_name: pet-service
     ports:
       - "8082:8082"
     environment:
@@ -110,7 +109,7 @@ services:
     build:
       context: ./chat-service
       dockerfile: Dockerfile
-    container_name: chat-service-test
+    container_name: chat-service
     ports:
       - "8083:8083"
     environment:
@@ -138,7 +137,7 @@ services:
     build:
       context: ./config-server
       dockerfile: Dockerfile
-    container_name: config-server-test
+    container_name: config-server
     ports:
       - "8888:8888"
     environment:
@@ -160,7 +159,7 @@ services:
     build:
       context: ./gateway-server
       dockerfile: Dockerfile
-    container_name: gateway-server-test
+    container_name: gateway-server
     ports:
       - "8080:8080"
     environment:
@@ -184,7 +183,7 @@ services:
     build:
       context: ./eureka-server
       dockerfile: Dockerfile
-    container_name: eureka-server-test
+    container_name: eureka-server
     ports:
       - "8761:8761"
     environment:

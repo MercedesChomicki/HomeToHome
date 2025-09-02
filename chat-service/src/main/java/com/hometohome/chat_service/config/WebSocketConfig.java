@@ -64,10 +64,6 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
         // Configurar endpoints para funcionar a través del gateway
         registry.addEndpoint("/ws")
                .withSockJS();
-        
-        // Endpoint adicional para el gateway
-        // registry.addEndpoint("/api/ws")
-        //        .withSockJS();
     }
 
     @Override

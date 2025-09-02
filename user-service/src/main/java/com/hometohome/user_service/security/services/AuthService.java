@@ -12,7 +12,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -29,15 +28,19 @@ public class AuthService {
 
     public LoginResponseDto login(LoginRequestDto loginRequest) {
         UserEntity user = userRepository.findByEmail(loginRequest.getEmail());
-        if (user == null) throw new UsernameNotFoundException("Usuario no encontrado");
+        if (user == null) throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "El usuario no existe");
 
-        UsernamePasswordAuthenticationToken token =
+        try {
+            UsernamePasswordAuthenticationToken token =
                 new UsernamePasswordAuthenticationToken(loginRequest.getEmail(), loginRequest.getPassword());
-
-        authManager.authenticate(token);
+            
+            authManager.authenticate(token);
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Contraseña incorrecta");
+        }
 
         String jwt = jwtService.generateToken(loginRequest.getEmail());
-        return new LoginResponseDto(jwt, user.getEmail(), user.getRole());
+        return new LoginResponseDto(jwt, user.getEmail(), user.getRole(), user.getId());
     }
 
     public UserResponseDto registerUser(UserRequestDto dto) {
@@ -45,7 +48,7 @@ public class AuthService {
         
         if (userRepository.existsByEmail(dto.getEmail())) {
             log.warn("User with email {} already exists", dto.getEmail());
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El usuario ya está registrado");
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "El usuario ya está registrado");
         }
 
         try {
