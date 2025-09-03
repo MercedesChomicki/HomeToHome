@@ -4,7 +4,6 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -19,7 +18,7 @@ public class PetResponseDto {
     private String size;
     private String story;
     private List<String> photosUrl;
-    private Boolean adopted;
+    private Boolean isAdopted;
     private UUID ownerId;
-    private Boolean requireApplication;
+    private Boolean isRequireApplication;
 }

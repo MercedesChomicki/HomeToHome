@@ -16,8 +16,12 @@ public interface PetMapper {
         return DateUtils.formatAge(birthDate);
     }
 
+    @Mapping(target = "isAdopted", ignore = true)
+    @Mapping(target = "isRequireApplication", ignore = true)
     Pet toEntity(PetRequestDto petRequestDto);
 
     @org.mapstruct.BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+    @Mapping(target = "isAdopted", ignore = true)
+    @Mapping(target = "isRequireApplication", ignore = true)
     void updatePetFromDto(PetRequestDto dto, @MappingTarget Pet entity);
 }

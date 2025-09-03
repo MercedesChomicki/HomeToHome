@@ -4,6 +4,7 @@ import com.hometohome.chat_service.service.JwtService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.lang.NonNull;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.simp.config.ChannelRegistration;
@@ -28,10 +29,10 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     private final JwtService jwtService;
 
     @Override
-    public void configureClientInboundChannel(ChannelRegistration registration) {
+    public void configureClientInboundChannel(@NonNull ChannelRegistration registration) {
         registration.interceptors(new ChannelInterceptor() {
             @Override
-            public Message<?> preSend(Message<?> message, MessageChannel channel) {
+            public Message<?> preSend(@NonNull Message<?> message, @NonNull MessageChannel channel) {
                 StompHeaderAccessor accessor = StompHeaderAccessor.wrap(message);
 
                 if (StompCommand.CONNECT.equals(accessor.getCommand())) {
@@ -60,14 +61,14 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     }
 
     @Override
-    public void registerStompEndpoints(StompEndpointRegistry registry) {
+    public void registerStompEndpoints(@NonNull StompEndpointRegistry registry) {
         // Configurar endpoints para funcionar a través del gateway
         registry.addEndpoint("/ws")
                .withSockJS();
     }
 
     @Override
-    public void configureMessageBroker(MessageBrokerRegistry registry) {
+    public void configureMessageBroker(@NonNull MessageBrokerRegistry registry) {
         registry.enableSimpleBroker("/topic", "/user/queue"); // Agregar /user/queue para mensajes privados
         registry.setApplicationDestinationPrefixes("/app"); // destinos que van al @MessageMapping
         registry.setUserDestinationPrefix("/user"); // Prefijo para mensajes privados
