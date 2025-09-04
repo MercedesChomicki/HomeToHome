@@ -52,7 +52,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
                             log.warn("⚠️ Token de autorización no válido o ausente");
                         }
                     } catch (Exception e) {
-                        log.error("❌ Error durante la autenticación WebSocket: {}", e.getMessage());
+                        log.error("❌ Error durante la autenticación WebSocket: {}", e);
                     }
                 }
                 return message;
@@ -64,7 +64,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     public void registerStompEndpoints(@NonNull StompEndpointRegistry registry) {
         // Configurar endpoints para funcionar a través del gateway
         registry.addEndpoint("/ws")
-               .withSockJS();
+                .setAllowedOrigins("http://localhost:5173");
     }
 
     @Override
