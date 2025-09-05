@@ -8,6 +8,7 @@ import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 
+import java.security.Principal;
 import java.time.LocalDateTime;
 
 @Slf4j
@@ -18,17 +19,24 @@ public class ChatController {
     private final SimpMessagingTemplate messagingTemplate;
 
     @MessageMapping("/chat")
-    public void sendMessage(@Payload ChatMessage message) {
+    public void sendMessage(@Payload ChatMessage message, Principal principal) {
+        if (principal == null) {
+            log.warn("⚠️ Principal es null en sendMessage, no autenticado");
+            return;
+        }
+        
         message.setTimestamp(LocalDateTime.now());
+        message.setSenderId(principal.getName()); // email del JWT
+        
         log.info("📨 Mensaje privado recibido: {} -> {}", message.getSenderId(), message.getRecipientId());
 
         // Enviar mensaje privado al destinatario específico
         messagingTemplate.convertAndSendToUser(
-                message.getRecipientId(),
+                message.getRecipientId(), // email del receptor
                 "/queue/messages",
                 message
         );
-        
-        log.info("✅ Mensaje privado enviado a: {}", message.getRecipientId());
+
+        log.info("➡️ Enviando a usuario={} destino=/queue/messages: {}", message.getRecipientId(), message);
     }
 }
