@@ -1,5 +1,14 @@
 # Etapa 0: Imagen con dependencias cacheadas
-FROM maven-deps-cache AS deps
+FROM maven:3.9.9-eclipse-temurin-21-alpine AS deps
+
+WORKDIR /app
+
+# Copiamos solo el pom.xml (esto permite que Maven descargue dependencias
+# sin necesidad de copiar el código completo todavía)
+COPY pom.xml .
+
+# Descargar dependencias y guardarlas en /root/.m2
+RUN mvn dependency:go-offline
 
 # Etapa 1: Build del microservicio con Maven
 FROM maven:3.9.9-eclipse-temurin-21-alpine AS build
