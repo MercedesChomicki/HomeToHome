@@ -20,6 +20,7 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 
 import java.security.Principal;
 import java.util.List;
+import java.util.UUID;
 
 @Slf4j
 @Configuration
@@ -48,14 +49,14 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     
                             if (token != null && token.startsWith("Bearer ")) {
                                 token = token.substring(7);
-                                String email = jwtService.extractEmail(token);
-                                log.info("✅ Usuario autenticado: {}", email);
+                                UUID userId = jwtService.extractUserId(token);
+                                log.info("✅ Usuario autenticado: {}", userId);
                                 
-                                // Crear autenticación
-                                if(email != null) {
-                                    UsernamePasswordAuthenticationToken user = new UsernamePasswordAuthenticationToken(email, null, List.of());
+                                // Crear autenticación con el UUID
+                                if(userId != null) {
+                                    UsernamePasswordAuthenticationToken user = new UsernamePasswordAuthenticationToken(userId.toString(), null, List.of());
                                     accessor.setUser(user);
-                                    log.info("✅ Usuario seteado en CONNECT: {}", email);
+                                    log.info("✅ Usuario seteado en CONNECT: {}", userId);
                                 }
                             } else {
                                 log.warn("⚠️ Token de autorización no válido o ausente");

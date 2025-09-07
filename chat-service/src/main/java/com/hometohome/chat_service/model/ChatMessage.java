@@ -6,14 +6,15 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @NoArgsConstructor
 @AllArgsConstructor
 @Data
 @ToString
 public class ChatMessage {
-    private String senderId;
-    private String recipientId;
+    private UUID senderId;
+    private UUID recipientId;
     private String content;
     private LocalDateTime timestamp;
 }

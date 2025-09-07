@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
 import java.util.Date;
+import java.util.UUID;
 import java.util.function.Function;
 
 @Component
@@ -16,8 +17,15 @@ public class JwtService {
     @Value("${jwt.secret}")
     private String SECRET_KEY;
 
+    // ✅ Ahora el sub es el UUID
+    public UUID extractUserId(String token) {
+        String sub = extractClaim(token, Claims::getSubject);
+        return UUID.fromString(sub);
+    }
+
+    // Email puede ser un claim opcional
     public String extractEmail(String token) {
-        return extractClaim(token, Claims::getSubject);
+        return extractClaim(token, claims -> claims.get("email", String.class));
     }
 
     public Boolean validateToken(String token) {

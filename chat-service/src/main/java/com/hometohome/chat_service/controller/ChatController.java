@@ -10,6 +10,7 @@ import org.springframework.stereotype.Controller;
 
 import java.security.Principal;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Slf4j
 @Controller
@@ -26,13 +27,13 @@ public class ChatController {
         }
         
         message.setTimestamp(LocalDateTime.now());
-        message.setSenderId(principal.getName()); // email del JWT
+        message.setSenderId(UUID.fromString(principal.getName())); // UUID del JWT
         
         log.info("📨 Mensaje privado recibido: {} -> {}", message.getSenderId(), message.getRecipientId());
 
         // Enviar mensaje privado al destinatario específico
         messagingTemplate.convertAndSendToUser(
-                message.getRecipientId(), // email del receptor
+                message.getRecipientId().toString(), // UUID del receptor
                 "/queue/messages",
                 message
         );

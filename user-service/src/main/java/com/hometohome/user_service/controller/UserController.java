@@ -3,6 +3,9 @@ package com.hometohome.user_service.controller;
 import com.hometohome.user_service.dto.request.UserRequestDto;
 import com.hometohome.user_service.dto.response.UserResponseDto;
 import com.hometohome.user_service.service.UserServiceImpl;
+
+import lombok.RequiredArgsConstructor;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -12,12 +15,9 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/users")
+@RequiredArgsConstructor
 public class UserController {
     private final UserServiceImpl userService;
-
-    public UserController(UserServiceImpl userService) {
-        this.userService = userService;
-    }
 
     @GetMapping("/{id}")
     public ResponseEntity<UserResponseDto> getUserById(@PathVariable UUID id) {

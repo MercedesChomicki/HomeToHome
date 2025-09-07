@@ -12,6 +12,7 @@ import javax.crypto.SecretKey;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 import java.util.function.Function;
 
 @Component
@@ -19,8 +20,15 @@ public class JwtService {
     @Value("${jwt.secret}")
     private String SECRET_KEY;
 
+    // ✅ Nuevo: extraer UUID desde el "sub"
+    public UUID extractUserId(String token) {
+        String sub = extractClaim(token, Claims::getSubject);
+        return UUID.fromString(sub);
+    }
+
+    // ✅ Nuevo: el email está en los claims
     public String extractEmail(String token) {
-        return extractClaim(token, Claims::getSubject);
+        return extractClaim(token, claims -> claims.get("email", String.class));
     }
 
     public Date extractExpiration(String token) {
@@ -44,20 +52,23 @@ public class JwtService {
         return extractExpiration(token).before(new Date());
     }
 
+    // ✅ Validamos contra userId en lugar de email
     public Boolean validateToken(String token, UserDetails userDetails) {
-        final String email = extractEmail(token);
+        String email = extractEmail(token);
         return (email.equals(userDetails.getUsername()) && !isTokenExpired(token));
     }
 
-    public String generateToken(String email){
+    // ✅ Generar token usando UUID como subject y email como claim
+    public String generateToken(UUID userId, String email) {
         Map<String, Object> claims = new HashMap<>();
-        return createToken(claims, email);
+        claims.put("email", email); // email queda como claim adicional
+        return createToken(claims, userId);
     }
 
-    private String createToken(Map<String, Object> claims, String email) {
+    private String createToken(Map<String, Object> claims, UUID userId) {
         return Jwts.builder()
                 .claims(claims)
-                .subject(email)
+                .subject(userId.toString()) // 👈 UUID como sub
                 .issuedAt(new Date(System.currentTimeMillis()))
                 .expiration(new Date(System.currentTimeMillis()+1000*60*15)) // 15 min
                 .signWith(getSignKey()).compact();

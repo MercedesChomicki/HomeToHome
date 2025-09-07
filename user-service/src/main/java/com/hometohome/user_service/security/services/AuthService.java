@@ -39,7 +39,7 @@ public class AuthService {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Contraseña incorrecta");
         }
 
-        String jwt = jwtService.generateToken(loginRequest.getEmail());
+        String jwt = jwtService.generateToken(user.getId(), user.getEmail());
         return new LoginResponseDto(jwt, user.getEmail(), user.getRole(), user.getId());
     }
 
