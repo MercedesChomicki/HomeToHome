@@ -14,6 +14,7 @@ import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.messaging.support.MessageHeaderAccessor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
@@ -54,9 +55,13 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
                                 
                                 // Crear autenticación con el UUID
                                 if(userId != null) {
-                                    UsernamePasswordAuthenticationToken user = new UsernamePasswordAuthenticationToken(userId.toString(), null, List.of());
-                                    accessor.setUser(user);
-                                    log.info("✅ Usuario seteado en CONNECT: {}", userId);
+                                    UsernamePasswordAuthenticationToken authentication = 
+                                        new UsernamePasswordAuthenticationToken(userId.toString(), token, List.of());
+                                    // 👉 Setear también en SecurityContextHolder -> propaga la autenticación al contexto
+                                    SecurityContextHolder.getContext().setAuthentication(authentication);
+                                    
+                                    accessor.setUser(new StompPrincipal(userId.toString(), token));
+                                    log.info("✅ Usuario seteado en CONNECT con StompPrincipal: {}", userId);
                                 }
                             } else {
                                 log.warn("⚠️ Token de autorización no válido o ausente");
@@ -77,6 +82,11 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
                         log.info("✉️  SEND user={}, dest={}",
                             user != null ? user.getName() : "null",
                             accessor.getDestination());
+                        
+                        if (user instanceof StompPrincipal principal) {
+                            log.info("🧩 Guardando StompPrincipal en PrincipalContextHolder para {}", principal.getName());
+                            PrincipalContextHolder.setPrincipal(principal);
+                        }
                     }   
                 }
                 return message;

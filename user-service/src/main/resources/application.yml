@@ -6,6 +6,10 @@ spring:
   config:
     import: optional:configserver:${SPRING_CLOUD_CONFIG_URI}
 
+# SERVICE TOKEN
+service:
+  token: 11111111-1111-1111-1111-111111111111
+  
 logging:
   level:
     org.springframework.security: DEBUG

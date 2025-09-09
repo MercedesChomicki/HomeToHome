@@ -1,6 +1,8 @@
 package com.hometohome.chat_service.controller;
 
+import com.hometohome.chat_service.dto.ChatMessageDto;
 import com.hometohome.chat_service.model.ChatMessage;
+import com.hometohome.chat_service.service.ChatService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.handler.annotation.MessageMapping;
@@ -18,6 +20,7 @@ import java.util.UUID;
 public class ChatController {
 
     private final SimpMessagingTemplate messagingTemplate;
+    private final ChatService chatService;
 
     @MessageMapping("/chat")
     public void sendMessage(@Payload ChatMessage message, Principal principal) {
@@ -31,13 +34,23 @@ public class ChatController {
         
         log.info("📨 Mensaje privado recibido: {} -> {}", message.getSenderId(), message.getRecipientId());
 
+        String senderUsername = chatService.getUser(message.getSenderId()).getName();
+
+        ChatMessageDto dto = new ChatMessageDto(
+            message.getSenderId(),
+            senderUsername,
+            message.getRecipientId(),
+            message.getContent(),
+            message.getTimestamp()
+        );
+
         // Enviar mensaje privado al destinatario específico
         messagingTemplate.convertAndSendToUser(
                 message.getRecipientId().toString(), // UUID del receptor
                 "/queue/messages",
-                message
+                dto
         );
 
-        log.info("➡️ Enviando a usuario={} destino=/queue/messages: {}", message.getRecipientId(), message);
+        log.info("➡️ Enviando a usuario={} destino=/queue/messages: {}", message.getRecipientId(), dto);
     }
 }
