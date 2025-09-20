@@ -4,6 +4,7 @@ import com.hometohome.user_service.dto.request.UserRequestDto;
 import com.hometohome.user_service.dto.response.UserResponseDto;
 import com.hometohome.user_service.service.UserServiceImpl;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.http.HttpStatus;
@@ -32,8 +33,8 @@ public class UserController {
     }
 
     @PostMapping
-    public ResponseEntity<UserResponseDto> createUser(@RequestBody UserRequestDto user) {
-        UserResponseDto createdUserResponse = userService.createUser(user);
+    public ResponseEntity<UserResponseDto> createUser(@Valid @RequestBody UserRequestDto dto) {
+        UserResponseDto createdUserResponse = userService.createUser(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdUserResponse);
     }
 
