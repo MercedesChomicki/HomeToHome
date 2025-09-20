@@ -144,6 +144,7 @@ services:
       - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}
       - GIT_URI=${GIT_URI}
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE}
+      - EUREKA_HEALTH_URL=${EUREKA_HEALTH_URL}
     depends_on:
       eureka-server:
         condition: service_healthy
