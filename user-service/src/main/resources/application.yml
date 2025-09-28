@@ -5,15 +5,19 @@ spring:
     active: ${SPRING_PROFILES_ACTIVE}
   config:
     import: optional:configserver:${SPRING_CLOUD_CONFIG_URI}
-
-# SERVICE TOKEN
-service:
-  token: 11111111-1111-1111-1111-111111111111
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: http://auth-service:8084/.well-known/jwks.json
   
 logging:
   level:
+    org.hibernate.SQL: DEBUG        # 👈 muestra queries SQL
+    org.hibernate.type.descriptor.sql: TRACE  # 👈 muestra valores de parámetros
+    org.hibernate.stat: DEBUG       # 👈 estadísticas de Hibernate (tiempos, caché, etc.)
+    org.springframework.transaction: DEBUG    # 👈 seguimiento de transacciones
+    org.springframework.orm.jpa: DEBUG
     org.springframework.security: DEBUG
     org.springframework.cloud.config: DEBUG
-    org.hibernate.SQL: DEBUG
-    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
     com.hometohome.user_service: DEBUG

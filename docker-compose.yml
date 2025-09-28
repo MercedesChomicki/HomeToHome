@@ -1,6 +1,20 @@
 version: '3.8'
 
 services:
+  auth-postgres:
+    image: postgres:13
+    container_name: auth-postgres
+    environment:
+      - POSTGRES_DB=${AUTH_POSTGRES_DB}
+      - POSTGRES_USER=${AUTH_POSTGRES_USER}
+      - POSTGRES_PASSWORD=${AUTH_POSTGRES_PASSWORD}
+    ports:
+      - "5434:5432"
+    volumes:
+      - auth_postgres_data:/var/lib/postgresql/data
+    networks:
+      - internal
+
   mongo-db:
     image: mongo
     container_name: mongo-db
@@ -14,7 +28,6 @@ services:
       - ./mongo-init:/docker-entrypoint-initdb.d/
     networks:
       - internal
-
   user-postgres:
     image: postgres:13
     container_name: user-postgres
@@ -40,6 +53,35 @@ services:
       - "5432:5432"
     volumes:
       - pet_postgres_data:/var/lib/postgresql/data
+    networks:
+      - internal
+
+  auth-service:
+    build:
+      context: ./auth-service
+      dockerfile: Dockerfile
+    container_name: auth-service
+    ports:
+      - "8084:8084"
+    environment:
+      - SPRING_DATASOURCE_URL=${AUTH_DATASOURCE_URL}
+      - SPRING_DATASOURCE_USERNAME=${AUTH_DATASOURCE_USERNAME}
+      - SPRING_DATASOURCE_PASSWORD=${AUTH_DATASOURCE_PASSWORD}
+      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE}
+      - JWT_SECRET=${JWT_SECRET}
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+      user-postgres:
+        condition: service_started
+      config-server:
+        condition: service_started
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8084/actuator/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     networks:
       - internal
 
@@ -167,6 +209,7 @@ services:
       - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE}
       - SPRING_CLOUD_CONFIG_URI=${SPRING_CLOUD_CONFIG_URI}
+      - JWT_SECRET=${JWT_SECRET}
     depends_on:
       eureka-server:
         condition: service_healthy
@@ -199,6 +242,7 @@ services:
 
 volumes:
   mongo_data:
+  auth_postgres_data:
   user_postgres_data:
   pet_postgres_data:
 
