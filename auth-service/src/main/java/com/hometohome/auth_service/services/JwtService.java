@@ -58,6 +58,7 @@ public class JwtService {
         return Jwts.builder()
                 .claims(claims)
                 .subject(userId.toString()) // 👈 UUID como subject
+                .audience().add("user-service").and() // 👈 audience para user-service
                 .issuedAt(new Date(System.currentTimeMillis()))
                 .expiration(new Date(System.currentTimeMillis() + jwtExpiration))
                 //.signWith(getSignKey())

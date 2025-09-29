@@ -6,14 +6,15 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import com.hometohome.auth_service.config.FeignConfig;
 import com.hometohome.auth_service.dto.UserRequestDto;
 import com.hometohome.auth_service.dto.UserResponseDto;
 
-@FeignClient(name = "user-service", path = "/users")
+@FeignClient(name = "user-service", path = "/users", configuration = FeignConfig.class)
 public interface UserClient {
     @PostMapping
     UserResponseDto createUser(@RequestBody UserRequestDto user);
 
     @GetMapping("/by-email")
-    UserResponseDto findByEmail(@RequestParam String email);
+    UserResponseDto findByEmail(@RequestParam("email") String email);
 }

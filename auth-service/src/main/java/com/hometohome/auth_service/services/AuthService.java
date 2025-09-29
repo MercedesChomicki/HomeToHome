@@ -1,8 +1,5 @@
 package com.hometohome.auth_service.services;
 
-import java.util.UUID;
-
-import org.springframework.context.annotation.Bean;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -17,9 +14,10 @@ import com.hometohome.auth_service.dto.UserResponseDto;
 import com.hometohome.auth_service.model.CredentialEntity;
 import com.hometohome.auth_service.repository.CredentialRepository;
 
-import feign.RequestInterceptor;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AuthService {
@@ -69,7 +67,7 @@ public class AuthService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Usuario no encontrado"));
 
         if (!pwdEncoder.matches(request.getPassword(), cred.getPassword())) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Credenciales inválidas");
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Contraseña incorrecta");
         }
 
         // obtener perfil (opcional)
@@ -83,13 +81,5 @@ public class AuthService {
         );
         
         return new AuthResponse(token, profile);
-    }
-
-    @Bean
-    public RequestInterceptor authInterceptor(JwtService jwtService) {
-        return requestTemplate -> {
-            String serviceToken = jwtService.generateServiceToken(UUID.randomUUID());
-            requestTemplate.header("Authorization", "Bearer " + serviceToken);
-        };
     }
 }

@@ -32,14 +32,12 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // Endpoints públicos
                         .requestMatchers("/auth/**").permitAll()
+                        .requestMatchers("/.well-known/jwks.json").permitAll()
                         // Todo lo demás requiere autenticación
                         .anyRequest().authenticated()
                 )
                 // Provider que valida credenciales de login
                 .authenticationProvider(authProvider())
-                // .sessionManagement(session -> session
-                //         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                // )
                 
                 // Filtro que valida JWT para llamadas internas con SERVICE_TOKEN
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
