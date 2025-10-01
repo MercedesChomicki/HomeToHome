@@ -13,8 +13,8 @@ import org.springframework.security.web.server.SecurityWebFilterChain;
 @EnableWebFluxSecurity
 public class SecurityConfig {
 
-    @Value("${jwt.secret}")
-    private String jwtSecret;
+    @Value("${auth.jwk-set-uri}")
+    private String jwkSetUri;
 
     @Bean
     public SecurityWebFilterChain springSecurityFilterChain(
@@ -35,12 +35,7 @@ public class SecurityConfig {
 
     @Bean
     public ReactiveJwtDecoder jwtDecoder() {
-        // Usa la misma secret key que auth-service
-        return NimbusReactiveJwtDecoder.withSecretKey(
-            new javax.crypto.spec.SecretKeySpec(
-                java.util.Base64.getDecoder().decode(jwtSecret),
-                "HmacSHA256"
-            )
-        ).build();
+        // Valida tokens RS256 usando la JWKS publicada por auth-service
+        return NimbusReactiveJwtDecoder.withJwkSetUri(jwkSetUri).build();
     }
 } 

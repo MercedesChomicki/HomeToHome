@@ -5,7 +5,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
-import com.hometohome.auth_service.clients.UserClient;
+import com.hometohome.auth_service.clients.UserFeignClient;
 import com.hometohome.auth_service.dto.AuthRequest;
 import com.hometohome.auth_service.dto.AuthResponse;
 import com.hometohome.auth_service.dto.RegisterRequest;
@@ -25,7 +25,7 @@ public class AuthService {
     private final CredentialRepository credentialRepository;
     private final PasswordEncoder pwdEncoder;
     private final JwtService jwtService;
-    private final UserClient userClient;
+    private final UserFeignClient userClient;
 
     public AuthResponse register(RegisterRequest request) {
         // Validar que no exista el email        

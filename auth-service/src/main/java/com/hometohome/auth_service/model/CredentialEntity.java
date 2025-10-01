@@ -12,8 +12,8 @@ import lombok.*;
 @AllArgsConstructor
 public class CredentialEntity {
     
-    @Id
-    private UUID id = UUID.randomUUID();
+    @Id @GeneratedValue
+    private UUID id;
 
     @Column(nullable = false, unique = true)
     private String email;

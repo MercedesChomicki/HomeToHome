@@ -11,7 +11,7 @@ import com.hometohome.auth_service.dto.UserRequestDto;
 import com.hometohome.auth_service.dto.UserResponseDto;
 
 @FeignClient(name = "user-service", path = "/users", configuration = FeignConfig.class)
-public interface UserClient {
+public interface UserFeignClient {
     @PostMapping
     UserResponseDto createUser(@RequestBody UserRequestDto user);
 

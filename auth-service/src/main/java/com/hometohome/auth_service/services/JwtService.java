@@ -18,8 +18,6 @@ import java.util.function.Function;
 @Component
 @RequiredArgsConstructor
 public class JwtService {
-    // @Value("${jwt.secret}")
-    // private String SECRET_KEY;
     
     private final KeyPair keyPair;
 
@@ -32,11 +30,6 @@ public class JwtService {
     public RSAPublicKey getPublicKey() {
         return (RSAPublicKey) keyPair.getPublic();
     }
-
-    // private SecretKey getSignKey() {
-    //     byte[] keyBytes = Decoders.BASE64.decode(SECRET_KEY);
-    //     return Keys.hmacShaKeyFor(keyBytes);
-    // }
 
     // Generar token para un usuario normal
     public String generateToken(UUID userId, String email, String name, String role) {
@@ -58,10 +51,9 @@ public class JwtService {
         return Jwts.builder()
                 .claims(claims)
                 .subject(userId.toString()) // 👈 UUID como subject
-                .audience().add("user-service").and() // 👈 audience para user-service
+                //.audience().add("user-service").and() // 👈 audience para user-service
                 .issuedAt(new Date(System.currentTimeMillis()))
                 .expiration(new Date(System.currentTimeMillis() + jwtExpiration))
-                //.signWith(getSignKey())
                 .signWith(getPrivateKey(), Jwts.SIG.RS256)
                 .compact();
     }
@@ -104,8 +96,4 @@ public class JwtService {
         return (userId.equals(((UserPrincipal) userDetails).getId()) 
                 && !isTokenExpired(token));
     }
-    // public Boolean validateToken(String token, UserDetails userDetails) {
-    //     String email = extractEmail(token);
-    //     return (email.equals(userDetails.getUsername()) && !isTokenExpired(token));
-    // }
 }

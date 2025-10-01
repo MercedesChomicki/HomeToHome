@@ -55,3 +55,7 @@ docker-volumes/
 # Env files
 .env.dev
 .env.prod
+
+# keys
+private.pem
+public.pem

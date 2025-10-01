@@ -23,18 +23,7 @@ import java.util.UUID;
 public class JwtAuthFilter extends OncePerRequestFilter {
     
     private final JwtService jwtService;
-    // private final UserDetailsServiceImpl userDetailsServiceImpl;
-
-    // @Value("${service.token}")
-    // private String serviceToken;
-
-    // @Override
-    // protected boolean shouldNotFilter(@NonNull HttpServletRequest request) {
-    //     String path = request.getRequestURI();
-    //     System.out.println("Filtro - Path recibido: " + path);
-    //     return path.contains("/auth/login") || path.contains("/auth/register");
-    // }
-
+    
     @Override
     protected void doFilterInternal(
         @NonNull HttpServletRequest request, 

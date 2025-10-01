@@ -22,11 +22,8 @@ public class FeignConfig {
     public RequestInterceptor authInterceptor() {
         return requestTemplate -> {
             // Token de servicio con rol SERVICE
-            String serviceToken = jwtService.generateToken(
-                UUID.fromString("11111111-1111-1111-1111-111111111111"), // serviceId fijo
-                "auth-service@internal", // email dummy
-                "Auth Service",          // nombre dummy
-                "SERVICE"                // rol clave!
+            String serviceToken = jwtService.generateServiceToken(
+                UUID.fromString("11111111-1111-1111-1111-111111111111") // serviceId fijo
             );
             log.debug("Injecting service token into Feign call");
             requestTemplate.header("Authorization", "Bearer " + serviceToken);

@@ -24,28 +24,36 @@ public class SecurityConfig {
         return http
             .csrf(AbstractHttpConfigurer::disable)
             .authorizeHttpRequests(auth -> auth
+                // 1️⃣ Endpoints públicos (sin autenticación)
                 .requestMatchers(HttpMethod.POST, "/users").permitAll() // registro
+                // 2️⃣ Endpoints exclusivos para comunicación interna (entre microservicios)
                 .requestMatchers(HttpMethod.GET, "/users/by-email").hasRole("SERVICE") // 👈 acepta tokens con rol SERVICE
+                // 3️⃣ Endpoints accesibles para usuarios logueados o servicios internos
+                .requestMatchers(HttpMethod.GET, "/users/**").hasAnyRole("USER", "ADMIN", "SERVICE")
+                // 4️⃣ Cualquier otra request requiere autenticación
                 .anyRequest().authenticated()
             )
-            //.oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults())) // valida JWT
+            // Configuración de JWT como recurso protegido
             .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> 
                 jwt.jwtAuthenticationConverter(jwtAuthConverter())))
             .build();
     }
 
+    /**
+     * Convierte el claim "role" del JWT en una autoridad de Spring Security.
+     * Ejemplo: role=USER → ROLE_USER
+     */
     @Bean
     public JwtAuthenticationConverter jwtAuthConverter() {
         JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
 
         converter.setJwtGrantedAuthoritiesConverter(jwt -> {
             String role = jwt.getClaimAsString("role");
-            String aud = jwt.getAudience().isEmpty() ? null : jwt.getAudience().get(0);
-            log.info("Token role claim: {}, audience: {}", role, aud);
-
-            if ("user-service".equals(aud) && role != null) {
+            // 🔑 Todos los usuarios logueados tienen un rol
+            if (role != null) {
                 return List.of(new SimpleGrantedAuthority("ROLE_" + role));
             }
+            // 🔒 En caso de que sea un token raro, no se asigna nada
             return List.of();
         });
 

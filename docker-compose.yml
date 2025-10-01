@@ -100,6 +100,7 @@ services:
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE}
       - SPRING_CLOUD_CONFIG_URI=${SPRING_CLOUD_CONFIG_URI}
       - JWT_SECRET=${JWT_SECRET}
+      - AUTH_SERVICE_URL=${AUTH_SERVICE_URL}
     depends_on:
       eureka-server:
         condition: service_healthy
@@ -210,6 +211,7 @@ services:
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE}
       - SPRING_CLOUD_CONFIG_URI=${SPRING_CLOUD_CONFIG_URI}
       - JWT_SECRET=${JWT_SECRET}
+      - AUTH_JWK_SET_URI=${AUTH_JWK_SET_URI}
     depends_on:
       eureka-server:
         condition: service_healthy
