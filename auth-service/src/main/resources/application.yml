@@ -16,6 +16,29 @@ spring:
     hibernate:
       ddl-auto: update
     show-sql: true
+  mail:
+    host: ${MAIL_HOST}
+    port: ${MAIL_PORT}
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+  
+frontend:
+  url: ${FRONTEND_URL}
+
+  # mail:
+  #   host: smtp.gmail.com
+  #   port: 587
+  #   username: tuemail@gmail.com
+  #   password: tuPasswordDeAplicacion
+  #   properties:
+  #     mail.smtp.auth: true
+  #     mail.smtp.starttls.enable: true
 
 service:
   token: 11111111-1111-1111-1111-111111111111
