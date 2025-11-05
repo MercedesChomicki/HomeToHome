@@ -30,7 +30,7 @@ public class PasswordResetService {
     private String frontendUrl;
 
     public void sendResetToken(String email) {
-        CredentialEntity user = credentialRepo.findByEmail(email)
+        credentialRepo.findByEmail(email)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Email no encontrado"));
 
         // Generar token aleatorio o JWT
