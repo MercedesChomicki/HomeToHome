@@ -9,7 +9,7 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          jwk-set-uri: http://auth-service:8084/.well-known/jwks.json
+          jwk-set-uri: ${AUTH_JWK_SET_URI:http://auth-service:8084/.well-known/jwks.json}
   
 logging:
   level:

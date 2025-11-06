@@ -12,45 +12,57 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 public class FeignAuthInterceptor implements RequestInterceptor {
+
     @Value("${service.token}")
     private String serviceToken;
 
     @Override
     public void apply(RequestTemplate template) {
+
         String token = null;
         String user = null;
 
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth != null) {
-            user = auth.getName();
-            Object creds = auth.getCredentials();
-            if (creds instanceof String s && !s.isBlank()) {
-                token = s;
-            }
-            // 👇 Verificamos si el principal es un StompPrincipal
-            if (auth.getPrincipal() instanceof StompPrincipal stompPrincipal) {
-                token = stompPrincipal.getToken();
-                user = stompPrincipal.getName();
-            }
-        } 
-
-        if ((token == null || token.isBlank()) && PrincipalContextHolder.getPrincipal() != null) {
-            StompPrincipal principal = PrincipalContextHolder.getPrincipal();
+        // 1️⃣ Token desde WebSocket (StompPrincipal)
+        var principal = PrincipalContextHolder.getPrincipal();
+        if (principal != null && principal.getToken() != null) {
             token = principal.getToken();
             user = principal.getName();
+            log.info("🧩 Feign → token desde StompPrincipal (user={})", user);
         }
 
-        // 👇 fallback al token de servicio
+        // 2️⃣ Token desde SecurityContextHolder (HTTP)
         if (token == null || token.isBlank()) {
-            token = serviceToken;
-            user = "SERVICE";
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            if (auth != null && auth.getCredentials() instanceof String creds && !creds.isBlank()) {
+                token = creds;
+                user = auth.getName();
+                log.info("🔐 Feign → token desde SecurityContextHolder (user={})", user);
+            }
         }
 
-        if (token != null && !token.isBlank()) {
-            template.header("Authorization", "Bearer " + token);
-            log.info("✅ Token agregado para usuario {} en llamada Feign", user);
-        } else {
-            log.warn("⚠️ No se encontró token válido ni en SecurityContextHolder ni en StompPrincipal");
+        // 3️⃣ Fallback SOLO si la llamada es interna autorizada
+        if (token == null || token.isBlank()) {
+            if (isInternalAuthCall(template)) {
+                token = serviceToken;
+                user = "SERVICE";
+                log.warn("⚠️ Feign → usando SERVICE TOKEN (llamada interna a AuthService)");
+            } else {
+                log.warn("⛔ Feign → NO se enviará token (sin usuario y no es llamada interna)");
+                return; // No agregamos header
+            }
         }
+
+        template.header("Authorization", "Bearer " + token);
+    }
+
+    /**
+     * Determina si esta llamada Feign es “interna permitida”
+     * para usar el service-token.
+     */
+    private boolean isInternalAuthCall(RequestTemplate template) {
+        String url = template.path().toLowerCase();
+
+        // ✅ Ajustar rutas internas permitidas
+        return url.contains("/internal/") || url.contains("/auth/validate");
     }
 }

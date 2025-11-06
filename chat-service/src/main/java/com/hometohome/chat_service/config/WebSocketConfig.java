@@ -1,6 +1,5 @@
 package com.hometohome.chat_service.config;
 
-import com.hometohome.chat_service.service.JwtService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Configuration;
@@ -15,13 +14,13 @@ import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.messaging.support.MessageHeaderAccessor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
 
-import java.security.Principal;
 import java.util.List;
-import java.util.UUID;
 
 @Slf4j
 @Configuration
@@ -29,7 +28,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
-    private final JwtService jwtService;
+    private final JwtDecoder jwtDecoder;
 
     @Override
     public void configureClientInboundChannel(@NonNull ChannelRegistration registration) {
@@ -38,57 +37,55 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
             public Message<?> preSend(@NonNull Message<?> message, @NonNull MessageChannel channel) {
                 StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
 
-                if(accessor != null) {
-                    if (StompCommand.CONNECT.equals(accessor.getCommand())) {
-                        try {
-                            String token = accessor.getFirstNativeHeader("Authorization");
-                            log.info("🔐 Intentando conectar WebSocket con token: {}", token != null ? "presente" : "ausente");
-                            
-                            if (token == null) {
-                                token = accessor.getFirstNativeHeader("authorization"); // fallback
-                            }
-    
-                            if (token != null && token.startsWith("Bearer ")) {
-                                token = token.substring(7);
-                                UUID userId = jwtService.extractUserId(token);
-                                log.info("✅ Usuario autenticado: {}", userId);
-                                
-                                // Crear autenticación con el UUID
-                                if(userId != null) {
-                                    UsernamePasswordAuthenticationToken authentication = 
-                                        new UsernamePasswordAuthenticationToken(userId.toString(), token, List.of());
-                                    // 👉 Setear también en SecurityContextHolder -> propaga la autenticación al contexto
-                                    SecurityContextHolder.getContext().setAuthentication(authentication);
-                                    
-                                    accessor.setUser(new StompPrincipal(userId.toString(), token));
-                                    log.info("✅ Usuario seteado en CONNECT con StompPrincipal: {}", userId);
-                                }
-                            } else {
-                                log.warn("⚠️ Token de autorización no válido o ausente");
-                            }
-                        } catch (Exception e) {
-                            log.error("❌ Error durante la autenticación WebSocket", e);
-                        }
-                    }
-    
-                    Principal user = accessor.getUser();
-                    if (StompCommand.SUBSCRIBE.equals(accessor.getCommand())) {
-                        log.info("📡 SUBSCRIBE user={}, dest={}",
-                            user != null ? user.getName() : "null",
-                            accessor.getDestination());
-                    }
-    
-                    if (StompCommand.SEND.equals(accessor.getCommand())) {
-                        log.info("✉️  SEND user={}, dest={}",
-                            user != null ? user.getName() : "null",
-                            accessor.getDestination());
-                        
-                        if (user instanceof StompPrincipal principal) {
-                            log.info("🧩 Guardando StompPrincipal en PrincipalContextHolder para {}", principal.getName());
-                            PrincipalContextHolder.setPrincipal(principal);
-                        }
-                    }   
+                if (accessor == null) {
+                    return message;
                 }
+    
+                StompCommand command = accessor.getCommand();
+    
+                // ✅ CONNECT: validar token, setear principal y authentication
+                if (StompCommand.CONNECT.equals(command)) {
+                    String headerAuth = accessor.getFirstNativeHeader("Authorization");
+                    if (headerAuth == null) {
+                        headerAuth = accessor.getFirstNativeHeader("authorization");
+                    }
+    
+                    if (headerAuth != null && headerAuth.startsWith("Bearer ")) {
+                        try {
+                            String token = headerAuth.substring(7);
+                            Jwt jwt = jwtDecoder.decode(token); // <-- Usaremos el jwtDecoder de Spring
+    
+                            String userId = jwt.getSubject(); // sub = userId
+                            log.info("✅ WebSocket CONNECT auth userId={}", userId);
+    
+                            StompPrincipal principal = new StompPrincipal(userId, token);
+                            accessor.setUser(principal);
+    
+                            UsernamePasswordAuthenticationToken authentication =
+                                    new UsernamePasswordAuthenticationToken(userId, token, List.of());
+    
+                            SecurityContextHolder.getContext().setAuthentication(authentication);
+                        } catch (Exception e) {
+                            log.error("❌ Error al autenticar WebSocket token", e);
+                        }
+                    } else {
+                        log.warn("⚠️ CONNECT sin token");
+                    }
+                }
+
+                // ✅ SEND: Si el principal existe → guardarlo para Feign
+                if (StompCommand.SEND.equals(command) && accessor.getUser() instanceof StompPrincipal principal) {
+                    log.info("✉️ SEND from user={}", principal.getName());
+                    PrincipalContextHolder.setPrincipal(principal);
+                }
+
+                // (Opcional) logging de SUBSCRIBE
+                if (StompCommand.SUBSCRIBE.equals(command)) {
+                    log.info("📡 SUBSCRIBE user={}, dest={}",
+                            accessor.getUser() != null ? accessor.getUser().getName() : "null",
+                            accessor.getDestination());
+                }
+
                 return message;
             }
         });

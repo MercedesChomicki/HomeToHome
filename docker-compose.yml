@@ -75,6 +75,7 @@ services:
       - MAIL_USERNAME=${MAIL_USERNAME}
       - MAIL_PASSWORD=${MAIL_PASSWORD}
       - FRONTEND_URL=${FRONTEND_URL}
+      - AUTH_SERVICE_SHARED_SECRET=${AUTH_SERVICE_SHARED_SECRET}
     depends_on:
       eureka-server:
         condition: service_healthy
@@ -105,7 +106,7 @@ services:
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE}
       - SPRING_CLOUD_CONFIG_URI=${SPRING_CLOUD_CONFIG_URI}
       - JWT_SECRET=${JWT_SECRET}
-      - AUTH_SERVICE_URL=${AUTH_SERVICE_URL}
+      - AUTH_SERVICE_URI=${AUTH_SERVICE_URI}
     depends_on:
       eureka-server:
         condition: service_healthy
@@ -166,6 +167,8 @@ services:
       - SPRING_CLOUD_CONFIG_URI=${SPRING_CLOUD_CONFIG_URI}
       - CHAT_DATASOURCE_URL=${CHAT_DATASOURCE_URL}
       - JWT_SECRET=${JWT_SECRET}
+      - AUTH_JWK_SET_URI=${AUTH_JWK_SET_URI}
+      - AUTH_SERVICE_SHARED_SECRET=${AUTH_SERVICE_SHARED_SECRET}
     depends_on:
       eureka-server:
         condition: service_healthy
