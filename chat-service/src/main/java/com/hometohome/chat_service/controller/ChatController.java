@@ -1,7 +1,5 @@
 package com.hometohome.chat_service.controller;
 
-import com.hometohome.chat_service.config.PrincipalContextHolder;
-import com.hometohome.chat_service.config.StompPrincipal;
 import com.hometohome.chat_service.dto.ChatMessageDto;
 import com.hometohome.chat_service.model.ChatMessage;
 import com.hometohome.chat_service.service.ChatService;
@@ -10,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 
 import java.security.Principal;
@@ -32,16 +31,6 @@ public class ChatController {
             return;
         }
 
-        StompPrincipal stompPrincipal;
-
-        if (principal instanceof StompPrincipal sp) {
-            stompPrincipal = sp;
-        } else {
-            stompPrincipal = new StompPrincipal(principal.getName(), null);
-        }
-
-        PrincipalContextHolder.setPrincipal(stompPrincipal);
-
         try {
             UUID senderId = UUID.fromString(principal.getName());
             message.setTimestamp(LocalDateTime.now());
@@ -55,7 +44,7 @@ public class ChatController {
                 senderUsername = chatService.getUser(senderId).getName();
             } catch (Exception ex) {
                 senderUsername = "Unknown";
-                log.error("❗ No se pudo obtener el nombre del usuario {} via AuthService: {}", senderId, ex.getMessage());
+                log.error("❗ No se pudo obtener el nombre del usuario {} via UserService: {}", senderId, ex.getMessage());
             }
 
             ChatMessageDto dto = new ChatMessageDto(
@@ -76,8 +65,8 @@ public class ChatController {
             log.info("✅ Enviado a user={} → /queue/messages: {}", message.getRecipientId(), dto);
 
         } finally {
-            // 🔥 Limpiar el Principal del ThreadLocal para evitar memory leaks / mezcla de usuarios
-            PrincipalContextHolder.clear();
+            // cleanup SecurityContext for this thread to avoid leaking auth to other tasks
+            SecurityContextHolder.clearContext();
         }
     }
 }

@@ -13,6 +13,7 @@ import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.messaging.support.MessageHeaderAccessor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
@@ -36,54 +37,50 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
             @Override
             public Message<?> preSend(@NonNull Message<?> message, @NonNull MessageChannel channel) {
                 StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
-
-                if (accessor == null) {
-                    return message;
-                }
+                if (accessor == null) return message;
     
                 StompCommand command = accessor.getCommand();
     
                 // ✅ CONNECT: validar token, setear principal y authentication
                 if (StompCommand.CONNECT.equals(command)) {
-                    String headerAuth = accessor.getFirstNativeHeader("Authorization");
-                    if (headerAuth == null) {
-                        headerAuth = accessor.getFirstNativeHeader("authorization");
-                    }
+                    String header = accessor.getFirstNativeHeader("Authorization");
+                    if (header == null) header = accessor.getFirstNativeHeader("authorization");
     
-                    if (headerAuth != null && headerAuth.startsWith("Bearer ")) {
+                    if (header != null && header.startsWith("Bearer ")) {
                         try {
-                            String token = headerAuth.substring(7);
+                            String token = header.substring(7);
                             Jwt jwt = jwtDecoder.decode(token); // <-- Usaremos el jwtDecoder de Spring
-    
                             String userId = jwt.getSubject(); // sub = userId
                             log.info("✅ WebSocket CONNECT auth userId={}", userId);
     
-                            StompPrincipal principal = new StompPrincipal(userId, token);
-                            accessor.setUser(principal);
+                            String role = jwt.getClaims().getOrDefault("role", "USER").toString();
+                            List<SimpleGrantedAuthority> authorities = List.of(new SimpleGrantedAuthority("ROLE_" + role));
     
                             UsernamePasswordAuthenticationToken authentication =
-                                    new UsernamePasswordAuthenticationToken(userId, token, List.of());
+                                    new UsernamePasswordAuthenticationToken(userId, token, authorities);
     
+                            // set SecurityContext and as Principal for STOMP
                             SecurityContextHolder.getContext().setAuthentication(authentication);
+                            accessor.setUser(authentication);
+
+                            log.info("WebSocket CONNECT authenticated userId={} role={}", userId, role);
                         } catch (Exception e) {
-                            log.error("❌ Error al autenticar WebSocket token", e);
+                            log.warn("WebSocket CONNECT token inválido: {}", e.getMessage());
                         }
                     } else {
-                        log.warn("⚠️ CONNECT sin token");
+                        log.warn("WebSocket CONNECT sin Authorization header");
                     }
                 }
 
-                // ✅ SEND: Si el principal existe → guardarlo para Feign
-                if (StompCommand.SEND.equals(command) && accessor.getUser() instanceof StompPrincipal principal) {
-                    log.info("✉️ SEND from user={}", principal.getName());
-                    PrincipalContextHolder.setPrincipal(principal);
+                // NOTE: For SEND/SUBSCRIBE we can log user; SecurityContext already populated on CONNECT
+                if (StompCommand.SEND.equals(command)) {
+                    var user = accessor.getUser();
+                    log.debug("STOMP SEND user={}, dest={}", user != null ? user.getName() : "null", accessor.getDestination());
                 }
 
-                // (Opcional) logging de SUBSCRIBE
                 if (StompCommand.SUBSCRIBE.equals(command)) {
-                    log.info("📡 SUBSCRIBE user={}, dest={}",
-                            accessor.getUser() != null ? accessor.getUser().getName() : "null",
-                            accessor.getDestination());
+                    var user = accessor.getUser();
+                    log.debug("STOMP SUBSCRIBE user={}, dest={}", user != null ? user.getName() : "null", accessor.getDestination());
                 }
 
                 return message;
@@ -96,6 +93,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
         // Configurar endpoints para funcionar a través del gateway
         registry.addEndpoint("/ws")
                 .setAllowedOrigins("http://localhost:5173");
+                //.withSockJS(); // RECOMENDADO en ambientes reales por fallback, pero opcional
     }
 
     @Override

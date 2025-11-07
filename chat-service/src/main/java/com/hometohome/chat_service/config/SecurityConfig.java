@@ -25,6 +25,7 @@ public class SecurityConfig {
                         .requestMatchers("/ws/**", "/api/ws/**").permitAll()
                         .anyRequest().authenticated()
                 )
+                .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> {}))
                 .build();
     }
 

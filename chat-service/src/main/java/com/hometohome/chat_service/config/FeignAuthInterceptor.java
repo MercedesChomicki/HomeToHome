@@ -2,67 +2,53 @@ package com.hometohome.chat_service.config;
 
 import feign.RequestInterceptor;
 import feign.RequestTemplate;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
+import com.hometohome.chat_service.service.ServiceTokenProvider;
+
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class FeignAuthInterceptor implements RequestInterceptor {
 
-    @Value("${service.token}")
-    private String serviceToken;
+    private final ServiceTokenProvider serviceTokenProvider;
 
     @Override
     public void apply(RequestTemplate template) {
-
         String token = null;
-        String user = null;
 
-        // 1️⃣ Token desde WebSocket (StompPrincipal)
-        var principal = PrincipalContextHolder.getPrincipal();
-        if (principal != null && principal.getToken() != null) {
-            token = principal.getToken();
-            user = principal.getName();
-            log.info("🧩 Feign → token desde StompPrincipal (user={})", user);
-        }
-
-        // 2️⃣ Token desde SecurityContextHolder (HTTP)
-        if (token == null || token.isBlank()) {
-            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-            if (auth != null && auth.getCredentials() instanceof String creds && !creds.isBlank()) {
-                token = creds;
-                user = auth.getName();
-                log.info("🔐 Feign → token desde SecurityContextHolder (user={})", user);
+        // 1) Token desde SecurityContext (user JWT) - esto cubre tanto HTTP como WebSocket
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if(auth != null) {
+            Object creds = auth.getCredentials();
+            if(creds instanceof String s && !s.isBlank()) {
+                token = s;
+                log.debug("FeignAuthInterceptor: usando token desde SecurityContext para user={}", auth.getName());
             }
         }
 
-        // 3️⃣ Fallback SOLO si la llamada es interna autorizada
+        // 2) Si no hay token: fallback a service token SÓLO para llamadas internas autorizadas
         if (token == null || token.isBlank()) {
             if (isInternalAuthCall(template)) {
-                token = serviceToken;
-                user = "SERVICE";
-                log.warn("⚠️ Feign → usando SERVICE TOKEN (llamada interna a AuthService)");
+                token = serviceTokenProvider.getToken();
+                log.debug("FeignAuthInterceptor: usando service token para llamada interna: {}", template.path());
             } else {
-                log.warn("⛔ Feign → NO se enviará token (sin usuario y no es llamada interna)");
-                return; // No agregamos header
+                log.debug("FeignAuthInterceptor: no se añade Authorization (no user y no es llamada interna): {}", template.path());
+                return;
             }
         }
 
-        template.header("Authorization", "Bearer " + token);
+        template.header("Authorization", "Bearer " + token);        
     }
 
-    /**
-     * Determina si esta llamada Feign es “interna permitida”
-     * para usar el service-token.
-     */
     private boolean isInternalAuthCall(RequestTemplate template) {
-        String url = template.path().toLowerCase();
-
-        // ✅ Ajustar rutas internas permitidas
-        return url.contains("/internal/") || url.contains("/auth/validate");
+        String path = template.path() == null ? "" : template.path().toLowerCase();
+        // Rutas "internas"
+        return path.contains("/auth/") || path.contains("/internal/") || path.contains("/service-token");
     }
 }

@@ -11,7 +11,3 @@ spring:
         jwt:
           jwk-set-uri: ${AUTH_JWK_SET_URI:http://auth-service:8084/.well-known/jwks.json}
           shared-secret: ${AUTH_SERVICE_SHARED_SECRET:super-secret-local}
-
-# SERVICE TOKEN
-service:
-  token: 11111111-1111-1111-1111-111111111111
