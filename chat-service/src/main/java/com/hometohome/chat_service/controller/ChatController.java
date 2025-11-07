@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 
 import java.security.Principal;
@@ -24,33 +25,48 @@ public class ChatController {
 
     @MessageMapping("/chat")
     public void sendMessage(@Payload ChatMessage message, Principal principal) {
+
         if (principal == null) {
-            log.warn("⚠️ Principal es null en sendMessage, no autenticado");
+            log.warn("⛔ Mensaje rechazado: Principal es null (no autenticado)");
             return;
         }
-        
-        message.setTimestamp(LocalDateTime.now());
-        message.setSenderId(UUID.fromString(principal.getName())); // UUID del JWT
-        
-        log.info("📨 Mensaje privado recibido: {} -> {}", message.getSenderId(), message.getRecipientId());
 
-        String senderUsername = chatService.getUser(message.getSenderId()).getName();
+        try {
+            UUID senderId = UUID.fromString(principal.getName());
+            message.setTimestamp(LocalDateTime.now());
+            message.setSenderId(senderId);
 
-        ChatMessageDto dto = new ChatMessageDto(
-            message.getSenderId(),
-            senderUsername,
-            message.getRecipientId(),
-            message.getContent(),
-            message.getTimestamp()
-        );
+            log.info("📨 Mensaje recibido: {} ➡ {}", senderId, message.getRecipientId());
 
-        // Enviar mensaje privado al destinatario específico
-        messagingTemplate.convertAndSendToUser(
-                message.getRecipientId().toString(), // UUID del receptor
-                "/queue/messages",
-                dto
-        );
+            // Obtener nombre del usuario vía Feign
+            String senderUsername;
+            try {
+                senderUsername = chatService.getUser(senderId).getName();
+            } catch (Exception ex) {
+                senderUsername = "Unknown";
+                log.error("❗ No se pudo obtener el nombre del usuario {} via UserService: {}", senderId, ex.getMessage());
+            }
 
-        log.info("➡️ Enviando a usuario={} destino=/queue/messages: {}", message.getRecipientId(), dto);
+            ChatMessageDto dto = new ChatMessageDto(
+                    message.getSenderId(),
+                    senderUsername,
+                    message.getRecipientId(),
+                    message.getContent(),
+                    message.getTimestamp()
+            );
+
+            // Enviar mensaje privado al destinatario específico
+            messagingTemplate.convertAndSendToUser(
+                    message.getRecipientId().toString(),
+                    "/queue/messages",
+                    dto
+            );
+
+            log.info("✅ Enviado a user={} → /queue/messages: {}", message.getRecipientId(), dto);
+
+        } finally {
+            // cleanup SecurityContext for this thread to avoid leaking auth to other tasks
+            SecurityContextHolder.clearContext();
+        }
     }
 }
