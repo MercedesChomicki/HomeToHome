@@ -1,12 +1,12 @@
 package com.hometohome.auth_service.controller;
 
+import com.hometohome.auth_service.config.ServiceAuthProperties;
 import com.hometohome.auth_service.services.JwtService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.UUID;
+import java.util.List;
 
 @RestController
 @RequestMapping("/auth")
@@ -15,22 +15,28 @@ public class ServiceTokenController {
 
     private final JwtService jwtService;
 
-    @Value("${auth.service.secret}")
-    private String serviceSecret;
+    private final ServiceAuthProperties serviceAuthProperties;
 
-    // Header simple para autenticar la petición entre servicios
-    private static final String HEADER = "X-Service-Secret";
+    private static final String SECRET_HEADER = "X-Service-Secret";
+    private static final String NAME_HEADER = "X-Service-Name";
 
-    @PostMapping("/service-token")
-    public ResponseEntity<?> issueServiceToken(@RequestHeader(value = HEADER, required = false) String secret) {
-        if (secret == null || !secret.equals(serviceSecret)) {
+    //@PostMapping("/service-token")
+    @PostMapping("/token")
+    public ResponseEntity<?> issueServiceToken(
+        @RequestHeader(NAME_HEADER) String serviceName,
+        @RequestHeader(value = SECRET_HEADER, required = false) String secret
+    ) {
+        // Autenticación
+        if (secret == null || !secret.equals(serviceAuthProperties.getSecrets().get(serviceName))) {
             return ResponseEntity.status(403).body("Forbidden");
         }
 
-        // Usamos un serviceId fijo o configurable
-        UUID serviceId = UUID.fromString("11111111-1111-1111-1111-111111111111");
-        String token = jwtService.generateServiceToken(serviceId);
+        // Autorización
+        List<String> scopes = serviceAuthProperties.getScopes().getOrDefault(serviceName, List.of());
 
+        // Generar token con scopes
+        String token = jwtService.generateServiceToken(serviceName, scopes);
+ 
         return ResponseEntity.ok(new TokenResponse(token));
     }
 

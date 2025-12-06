@@ -33,24 +33,12 @@ public class UserPrincipal implements UserDetails {
         return List.of(new SimpleGrantedAuthority("ROLE_" + role));
     }
 
-    @Override
-    public String getPassword() {
-        return password;
-    }
-
-    @Override
-    public String getUsername() {
-        // ⚠️ Para login usamos email, para service token devolvemos id
-        return email != null ? email : id.toString();
-    }
+    @Override public String getPassword() { return password; }
+    @Override public String getUsername() { return email != null ? email : id != null ? id.toString() : null; }
 
     // Métodos extra de UserDetails
-    @Override
-    public boolean isAccountNonExpired() { return true; }
-    @Override
-    public boolean isAccountNonLocked() { return true; }
-    @Override
-    public boolean isCredentialsNonExpired() { return true; }
-    @Override
-    public boolean isEnabled() { return true; }
+    @Override public boolean isAccountNonExpired() { return true; }
+    @Override public boolean isAccountNonLocked() { return true; }
+    @Override public boolean isCredentialsNonExpired() { return true; }
+    @Override public boolean isEnabled() { return true; }
 }

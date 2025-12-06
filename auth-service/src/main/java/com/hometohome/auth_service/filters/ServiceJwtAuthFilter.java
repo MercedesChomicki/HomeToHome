@@ -12,15 +12,15 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import com.hometohome.auth_service.model.UserPrincipal;
+import com.hometohome.auth_service.model.ServicePrincipal;
 import com.hometohome.auth_service.services.JwtService;
 
 import java.io.IOException;
-import java.util.UUID;
+import java.util.List;
 
 @Component
 @RequiredArgsConstructor
-public class JwtAuthFilter extends OncePerRequestFilter {
+public class ServiceJwtAuthFilter extends OncePerRequestFilter {
     
     private final JwtService jwtService;
     
@@ -32,29 +32,41 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     ) throws ServletException, IOException {
 
         final String authHeader = request.getHeader("Authorization");
-        
         if(authHeader == null || !authHeader.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
             return;
         }
         
-        String jwt = authHeader.substring(7);
-        String role = jwtService.extractRole(jwt);
+        String token = authHeader.substring(7);
 
-        // 👇 Solo aceptamos tokens de servicio dentro de auth-service
-        if(!"SERVICE".equals(role)) {
+        String role;
+        try {
+            role = jwtService.extractRole(token);
+        } catch (Exception e) {
             filterChain.doFilter(request, response);
             return;
         }
 
-        UUID serviceId = jwtService.extractUserId(jwt);
-        UserPrincipal principal = new UserPrincipal(serviceId, "SERVICE");
+        if (!"SERVICE".equals(role)) {
+            // not a service token — let other filters handle
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        // valid service token: build ServicePrincipal with scopes -> authorities
+        String serviceName = jwtService.extractSubject(token);
+        List<String> scopes = jwtService.extractScopes(token);
+        
+        ServicePrincipal principal = new ServicePrincipal(serviceName, scopes);
 
         UsernamePasswordAuthenticationToken authToken = 
-            new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities());
+            new UsernamePasswordAuthenticationToken(
+                principal, 
+                null, 
+                principal.getAuthorities()
+            );
         
         SecurityContextHolder.getContext().setAuthentication(authToken);
-
         filterChain.doFilter(request, response);
     }
 }

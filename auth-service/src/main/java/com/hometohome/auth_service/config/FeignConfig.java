@@ -1,6 +1,6 @@
 package com.hometohome.auth_service.config;
 
-import java.util.UUID;
+import java.util.List;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -21,12 +21,12 @@ public class FeignConfig {
     @Bean
     public RequestInterceptor authInterceptor() {
         return requestTemplate -> {
-            // Token de servicio con rol SERVICE
             String serviceToken = jwtService.generateServiceToken(
-                UUID.fromString("11111111-1111-1111-1111-111111111111") // serviceId fijo
+                "auth-service",
+                List.of("users.read", "pets.write")  // según scopes permitidos
             );
             log.debug("Injecting service token into Feign call");
-            requestTemplate.header("Authorization", "Bearer " + serviceToken);
+            requestTemplate.header("Authorization", "Bearer " + serviceToken);            
         };
     }
 }

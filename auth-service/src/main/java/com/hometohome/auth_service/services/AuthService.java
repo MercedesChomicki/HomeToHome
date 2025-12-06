@@ -52,11 +52,11 @@ public class AuthService {
         UserResponseDto profile = userClient.createUser(userReq);
 
         // Generar token JWT (userId = profile.id)
-        String token = jwtService.generateToken(
+        String token = jwtService.generateUserToken(
             profile.getId(), 
             profile.getEmail(), 
             profile.getName(), 
-            "USER"
+            cred.getRole()
         );
 
         return new AuthResponse(token, profile);
@@ -73,7 +73,7 @@ public class AuthService {
         // obtener perfil (opcional)
         UserResponseDto profile = userClient.findByEmail(request.getEmail());
 
-        String token = jwtService.generateToken(
+        String token = jwtService.generateUserToken(
             profile.getId(), 
             profile.getEmail(), 
             profile.getName(), 
