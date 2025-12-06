@@ -40,13 +40,22 @@ frontend:
   #     mail.smtp.auth: true
   #     mail.smtp.starttls.enable: true
 
-service:
-  token: 11111111-1111-1111-1111-111111111111
 user-service:
   url: http://user-service
+  
 auth:
   service:
-    secret: ${AUTH_SERVICE_SHARED_SECRET:super-secret-local} # secreto compartido
+    # Autenticación
+    secrets:
+      user-service: ${USER_SERVICE_SECRET}
+      pet-service: ${PET_SERVICE_SECRET}
+      chat-service: ${CHAT_SERVICE_SECRET}
+
+    # Autorización
+    scopes:
+      user-service: [ "users.read" ]
+      pet-service: [ "pets.read", "pets.write" ]
+      chat-service: [ "chat.send", "chat.read" ]
 
 feign:
   client:

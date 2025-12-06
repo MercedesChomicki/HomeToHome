@@ -31,39 +31,38 @@ public class JwtService {
         return (RSAPublicKey) keyPair.getPublic();
     }
 
-    // Generar token para un usuario normal
-    public String generateToken(UUID userId, String email, String name, String role) {
+    // User token (subject = UUID userId)
+    public String generateUserToken(UUID userId, String email, String name, String role) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("email", email); 
         claims.put("name", name);
         claims.put("role", role);
-        return createToken(claims, userId, 1000 * 60 * 15);
+        return createToken(claims, userId.toString(), 1000 * 60 * 15);
     }
 
-    // Generar token especial de servicio
-    public String generateServiceToken(UUID serviceId) {
+    // Service token (subject = serviceName OR serviceId)
+    public String generateServiceToken(String serviceName, List<String> scopes) {
         Map<String, Object> claims = new HashMap<>();
-        claims.put("role", "SERVICE"); // 👈 claim extra
-        return createToken(claims, serviceId, 1000 * 60 * 60 * 24); // 24h
+        claims.put("role", "SERVICE");
+        claims.put("serviceName", serviceName);
+        claims.put("scopes", scopes != null ? scopes : List.of());
+        return createToken(claims, serviceName, 1000 * 60 * 60 * 24); // 24h
     }
 
-    private String createToken(Map<String, Object> claims, UUID userId, long jwtExpiration) {
+    private String createToken(Map<String, Object> claims, String subject, long jwtExpiration) {
         return Jwts.builder()
                 .claims(claims)
-                .subject(userId.toString()) // 👈 UUID como subject
-                //.audience().add("user-service").and() // 👈 audience para user-service
+                .subject(subject) // Nombre del servicio o userId
                 .issuedAt(new Date(System.currentTimeMillis()))
                 .expiration(new Date(System.currentTimeMillis() + jwtExpiration))
                 .signWith(getPrivateKey(), Jwts.SIG.RS256)
                 .compact();
     }
 
-    // Extraer desde los claims
+    // Extractors
     public UUID extractUserId(String token) {
-        return UUID.fromString(extractClaim(token, Claims::getSubject));
-    }
-    public Date extractExpiration(String token) {
-        return extractClaim(token, Claims::getExpiration);
+        String sub = extractClaim(token, Claims::getSubject);
+        return UUID.fromString(sub);
     }
     public String extractEmail(String token) {
         return extractClaim(token, claims -> claims.get("email", String.class));
@@ -71,9 +70,23 @@ public class JwtService {
     public String extractName(String token) {
         return extractClaim(token, claims -> claims.get("name", String.class));
     }
+    public String extractSubject(String token) {
+        return extractClaim(token, Claims::getSubject);
+    }
     public String extractRole(String token) {
         return extractClaim(token, claims -> claims.get("role", String.class));
     }
+    @SuppressWarnings("unchecked")
+    public List<String> extractScopes(String token) {
+        return extractClaim(token, claims -> (List<String>) claims.getOrDefault("scopes", List.of()));
+    }
+    public String extractServiceName(String token) {
+        return extractClaim(token, claims -> claims.get("serviceName", String.class));
+    }
+    public Date extractExpiration(String token) {
+        return extractClaim(token, Claims::getExpiration);
+    }
+
     public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
         final Claims claims = extractAllClaims(token);
         return claimsResolver.apply(claims);
@@ -90,7 +103,6 @@ public class JwtService {
         return extractExpiration(token).before(new Date());
     }
 
-    // Validamos contra userId en lugar de email
     public Boolean validateToken(String token, UserDetails userDetails) {
         UUID userId = extractUserId(token);
         return (userId.equals(((UserPrincipal) userDetails).getId()) 

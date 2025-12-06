@@ -12,7 +12,9 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import com.hometohome.auth_service.filters.JwtAuthFilter;
+
+import com.hometohome.auth_service.filters.ServiceJwtAuthFilter;
+import com.hometohome.auth_service.filters.UserJwtAuthFilter;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
@@ -20,7 +22,8 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final JwtAuthFilter jwtAuthFilter;
+    private final ServiceJwtAuthFilter serviceJwtAuthFilter;
+    private final UserJwtAuthFilter userJwtAuthFilter;
     private final UserDetailsService userDetailsService;
 
     /** Se utiliza para especificar qué patrones de URL requieren
@@ -38,9 +41,9 @@ public class SecurityConfig {
                 )
                 // Provider que valida credenciales de login
                 .authenticationProvider(authProvider())
-                
-                // Filtro que valida JWT para llamadas internas con SERVICE_TOKEN
-                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+                // Order: 1) Service tokens first, 2) user tokens
+                .addFilterBefore(serviceJwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(userJwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
     }
 
